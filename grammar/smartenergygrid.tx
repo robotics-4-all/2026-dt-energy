@@ -1,0 +1,326 @@
+SmartEnergyGridModel:
+    (
+        grids*=PowerGrid
+        
+        // Elements
+        substations*=SubStation
+        batteries*=BatteryStorage
+        transformers*=Transformer
+        
+        // Producers
+        thermalPlants*=ThermalPlant
+        solarParks*=SolarPark
+        windFarms*=WindFarm
+        
+        // Consumers
+        residentials*=Residential
+        industrials*=Industrial
+        
+        globalDistributions*=GlobalDistributions
+        classDistributions*=ClassDistributions
+    )#
+;
+
+// Custom κανόνας για αναγνώριση πεζών true/false σε Python boolean
+boolean:
+    'true' | 'false'
+;
+
+OperationalStatus:
+    'ACTIVE' | 'INACTIVE' | 'MAINTENANCE' | 'FAULT' | 'STANDBY'
+;
+
+// ---- Stochastic telemetry distributions (global / class / instance) ----
+
+DistributionVariable:
+    'wind_speed' | 'solar_noise' | 'load_noise' | 'voltage_noise'
+    | 'frequency_noise' | 'soc_noise' | 'congestion_noise'
+;
+
+NodeClassName:
+    'ThermalPlant' | 'SolarPark' | 'WindFarm' | 'Residential' | 'Industrial'
+    | 'SubStation' | 'BatteryStorage' | 'Transformer'
+;
+
+Distribution:
+    WeibullDist | NormalDist | BetaDist | LogNormalDist | GammaDist | PoissonDist
+;
+
+WeibullDist:
+    'WEIBULL' '(' 'shape' '=' shape=FLOAT ',' 'scale' '=' scale=FLOAT ')'
+;
+
+NormalDist:
+    'NORMAL' '(' 'mu' '=' mu=FLOAT ',' 'sigma' '=' sigma=FLOAT ')'
+;
+
+BetaDist:
+    'BETA' '(' 'alpha' '=' alpha=FLOAT ',' 'beta' '=' beta=FLOAT ')'
+;
+
+LogNormalDist:
+    'LOGNORMAL' '(' 'mu' '=' mu=FLOAT ',' 'sigma' '=' sigma=FLOAT ')'
+;
+
+GammaDist:
+    'GAMMA' '(' 'shape' '=' shape=FLOAT ',' 'scale' '=' scale=FLOAT ')'
+;
+
+PoissonDist:
+    'POISSON' '(' 'lam' '=' lam=FLOAT ')'
+;
+
+DistributionEntry:
+    variable=DistributionVariable ':' distribution=Distribution
+;
+
+GlobalDistributions:
+    'GlobalDistributions' name=ID
+        distributions*=DistributionEntry
+    'end'
+;
+
+ClassDistributions:
+    'ClassDistributions' name=ID
+        'appliesTo:' appliesTo=NodeClassName
+        distributions*=DistributionEntry
+    'end'
+;
+
+SpatialData:
+    'location' '{'
+        ('locationName:' locationName=STRING)
+        ('latitude:' latitude=FLOAT)
+        ('longitude:' longitude=FLOAT)
+    '}'
+;
+
+PowerGrid:
+    'PowerGrid' name=ID
+    (
+        ('gridName:' gridName=STRING)
+        ('region:' region=STRING)
+    )#
+    'end'
+;
+
+// Διασφάλιση ότι οποιοδήποτε component μπορεί να είναι source/target σε PowerLine
+AnyGridNode:
+    SubStation | BatteryStorage | Transformer | ThermalPlant | SolarPark | WindFarm | Residential | Industrial
+;
+
+SubStation:
+    'SubStation' name=ID
+    (
+        ('id:' elementId=STRING)
+        ('name:' elementName=STRING)
+        ('voltageLevel:' voltageLevel=FLOAT)
+        ('status:' status=OperationalStatus)
+        ('spatial:' spatial=SpatialData)?
+        ('congestionLevel:' congestionLevel=FLOAT)?
+        ('connectedTo:' '-' connectedTo*=[SubStation]['-'] '-')?
+        ('lines' '{' lines*=PowerLine '}')?
+        ('distributions' '{' distributions*=DistributionEntry '}')?
+    )#
+    'end'
+;
+
+BatteryStorage:
+    'BatteryStorage' name=ID
+    (
+        ('id:' elementId=STRING)
+        ('name:' elementName=STRING)
+        ('voltageLevel:' voltageLevel=FLOAT)
+        ('status:' status=OperationalStatus)
+        ('spatial:' spatial=SpatialData)?
+        ('capacityMWh:' capacityMWh=FLOAT)
+        ('stateOfCharge:' stateOfCharge=FLOAT)
+        ('lines' '{' lines*=PowerLine '}')?
+        ('distributions' '{' distributions*=DistributionEntry '}')?
+    )#
+    'end'
+;
+
+Transformer:
+    'Transformer' name=ID
+    (
+        ('id:' elementId=STRING)
+        ('name:' elementName=STRING)
+        ('voltageLevel:' voltageLevel=FLOAT)
+        ('status:' status=OperationalStatus)
+        ('spatial:' spatial=SpatialData)?
+        ('ratingKVA:' ratingKVA=FLOAT)
+        ('efficiency:' efficiency=FLOAT)
+        ('primaryVoltage:' primaryVoltage=FLOAT)
+        ('secondaryVoltage:' secondaryVoltage=FLOAT)
+        ('lines' '{' lines*=PowerLine '}')?
+        ('distributions' '{' distributions*=DistributionEntry '}')?
+    )#
+    'end'
+;
+
+GridElement:
+    SubStation | BatteryStorage | Transformer
+;
+
+ThermalPlant:
+    'ThermalPlant' name=ID
+    (
+        ('id:' elementId=STRING)
+        ('name:' elementName=STRING)
+        ('voltageLevel:' voltageLevel=FLOAT)
+        ('status:' status=OperationalStatus)
+        ('spatial:' spatial=SpatialData)?
+        ('measuredVoltage:' measuredVoltage=FLOAT)
+        ('measuredCurrent:' measuredCurrent=FLOAT)
+        ('powerFactor:' powerFactor=FLOAT)
+        ('frequency:' frequency=FLOAT)
+        ('activePower:' activePower=FLOAT)
+        ('reactivePower:' reactivePower=FLOAT)
+        ('lastUpdate:' lastUpdate=STRING)
+        ('locationRef:' locationRef=STRING)?
+        ('isControllable:' isControllable=boolean)
+        ('maxCapacityMW:' maxCapacityMW=FLOAT)
+        ('currentOutputMW:' currentOutputMW=FLOAT)
+        ('fuelType:' fuelType=STRING)
+        ('efficiency:' efficiency=FLOAT)
+        ('thermalOutputMW:' thermalOutputMW=FLOAT)
+        ('co2SpecificEmissions:' co2SpecificEmissions=FLOAT)
+        ('lines' '{' lines*=PowerLine '}')?
+        ('distributions' '{' distributions*=DistributionEntry '}')?
+    )#
+    'end'
+;
+
+SolarPark:
+    'SolarPark' name=ID
+    (
+        ('id:' elementId=STRING)
+        ('name:' elementName=STRING)
+        ('voltageLevel:' voltageLevel=FLOAT)
+        ('status:' status=OperationalStatus)
+        ('spatial:' spatial=SpatialData)?
+        ('measuredVoltage:' measuredVoltage=FLOAT)
+        ('measuredCurrent:' measuredCurrent=FLOAT)
+        ('powerFactor:' powerFactor=FLOAT)
+        ('frequency:' frequency=FLOAT)
+        ('activePower:' activePower=FLOAT)
+        ('reactivePower:' reactivePower=FLOAT)
+        ('lastUpdate:' lastUpdate=STRING)
+        ('locationRef:' locationRef=STRING)?
+        ('isControllable:' isControllable=boolean)
+        ('maxCapacityMW:' maxCapacityMW=FLOAT)
+        ('currentOutputMW:' currentOutputMW=FLOAT)
+        ('panelType:' panelType=STRING)
+        ('cloudCover:' cloudCover=FLOAT)
+        ('lines' '{' lines*=PowerLine '}')?
+        ('distributions' '{' distributions*=DistributionEntry '}')?
+    )#
+    'end'
+;
+
+WindFarm:
+    'WindFarm' name=ID
+    (
+        ('id:' elementId=STRING)
+        ('name:' elementName=STRING)
+        ('voltageLevel:' voltageLevel=FLOAT)
+        ('status:' status=OperationalStatus)
+        ('spatial:' spatial=SpatialData)?
+        ('measuredVoltage:' measuredVoltage=FLOAT)
+        ('measuredCurrent:' measuredCurrent=FLOAT)
+        ('powerFactor:' powerFactor=FLOAT)
+        ('frequency:' frequency=FLOAT)
+        ('activePower:' activePower=FLOAT)
+        ('reactivePower:' reactivePower=FLOAT)
+        ('lastUpdate:' lastUpdate=STRING)
+        ('locationRef:' locationRef=STRING)?
+        ('isControllable:' isControllable=boolean)
+        ('maxCapacityMW:' maxCapacityMW=FLOAT)
+        ('currentOutputMW:' currentOutputMW=FLOAT)
+        ('windSpeed:' windSpeed=FLOAT)
+        ('turbineCount:' turbineCount=INT)
+        ('lines' '{' lines*=PowerLine '}')?
+        ('distributions' '{' distributions*=DistributionEntry '}')?
+    )#
+    'end'
+;
+
+Residential:
+    'Residential' name=ID
+    (
+        ('id:' elementId=STRING)
+        ('name:' elementName=STRING)
+        ('voltageLevel:' voltageLevel=FLOAT)
+        ('status:' status=OperationalStatus)
+        ('spatial:' spatial=SpatialData)?
+        ('measuredVoltage:' measuredVoltage=FLOAT)
+        ('measuredCurrent:' measuredCurrent=FLOAT)
+        ('powerFactor:' powerFactor=FLOAT)
+        ('frequency:' frequency=FLOAT)
+        ('activePower:' activePower=FLOAT)
+        ('reactivePower:' reactivePower=FLOAT)
+        ('lastUpdate:' lastUpdate=STRING)
+        ('locationRef:' locationRef=STRING)?
+        ('isControllable:' isControllable=boolean)
+        ('demandMW:' demandMW=FLOAT)
+        ('currentConsumption:' currentConsumption=FLOAT)
+        ('numberOfResidents:' numberOfResidents=INT)
+        ('hasSmartAppliances:' hasSmartAppliances=boolean)
+        ('lines' '{' lines*=PowerLine '}')?
+        ('distributions' '{' distributions*=DistributionEntry '}')?
+    )#
+    'end'
+;
+
+Industrial:
+    'Industrial' name=ID
+    (
+        ('id:' elementId=STRING)
+        ('name:' elementName=STRING)
+        ('voltageLevel:' voltageLevel=FLOAT)
+        ('status:' status=OperationalStatus)
+        ('spatial:' spatial=SpatialData)?
+        ('measuredVoltage:' measuredVoltage=FLOAT)
+        ('measuredCurrent:' measuredCurrent=FLOAT)
+        ('powerFactor:' powerFactor=FLOAT)
+        ('frequency:' frequency=FLOAT)
+        ('activePower:' activePower=FLOAT)
+        ('reactivePower:' reactivePower=FLOAT)
+        ('lastUpdate:' lastUpdate=STRING)
+        ('locationRef:' locationRef=STRING)?
+        ('isControllable:' isControllable=boolean)
+        ('demandMW:' demandMW=FLOAT)
+        ('currentConsumption:' currentConsumption=FLOAT)
+        ('industryType:' industryType=STRING)
+        ('lines' '{' lines*=PowerLine '}')?
+        ('distributions' '{' distributions*=DistributionEntry '}')?
+    )#
+    'end'
+;
+
+Producer:
+    ThermalPlant | SolarPark | WindFarm
+;
+
+Consumer:
+    Residential | Industrial
+;
+
+EnergyNode:
+    Producer | Consumer
+;
+
+PowerLine:
+    'PowerLine' name=ID
+    (
+        ('id:' lineId=STRING)
+        ('lengthKM:' lengthKM=FLOAT)
+        ('maxCapacityMW:' maxCapacityMW=FLOAT)
+        ('source:' source=[AnyGridNode])
+        ('target:' target=[AnyGridNode])
+    )#
+    'end'
+;
+
+Comment: /\/\/.*?$/ | /\/\*(.|\n)*?\*\//;

@@ -1,0 +1,159 @@
+name: {{ project_slug }}-digital-twin
+
+services:
+
+  mosquitto:
+    image: eclipse-mosquitto:2
+    container_name: {{ project_slug }}-mosquitto
+    ports:
+      - "1883:1883"
+    volumes:
+      - ./mosquitto/config:/mosquitto/config
+      - mosquitto-data:/mosquitto/data
+      - mosquitto-log:/mosquitto/log
+
+  kafka:
+    image: confluentinc/cp-kafka:7.6.0
+    container_name: {{ project_slug }}-kafka
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29092,PLAINTEXT_HOST://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      CLUSTER_ID: {{ kafka_cluster_id }}
+    volumes:
+      - kafka-data:/var/lib/kafka/data
+
+  kafka-connect:
+    build:
+      context: .
+      dockerfile: kafka-connect.Dockerfile
+    container_name: {{ project_slug }}-kafka-connect
+    depends_on:
+      - kafka
+      - mosquitto
+    ports:
+      - "8083:8083"
+    environment:
+      CONNECT_BOOTSTRAP_SERVERS: kafka:29092
+      CONNECT_REST_ADVERTISED_HOST_NAME: kafka-connect
+      CONNECT_GROUP_ID: {{ project_slug }}-connect-cluster
+      CONNECT_CONFIG_STORAGE_TOPIC: _connect-configs
+      CONNECT_OFFSET_STORAGE_TOPIC: _connect-offsets
+      CONNECT_STATUS_STORAGE_TOPIC: _connect-status
+      CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_KEY_CONVERTER: org.apache.kafka.connect.storage.StringConverter
+      CONNECT_VALUE_CONVERTER: org.apache.kafka.connect.storage.StringConverter
+      CONNECT_PLUGIN_PATH: /usr/share/java,/usr/share/confluent-hub-components
+
+  # Εφάπαξ container: περιμένει να είναι έτοιμο το Kafka Connect REST API και
+  # καταχωρεί αυτόματα και τους τρεις connectors (πριν γινόταν χειροκίνητα με curl).
+  connector-init:
+    image: curlimages/curl:8.8.0
+    container_name: {{ project_slug }}-connector-init
+    depends_on:
+      - kafka-connect
+    volumes:
+      - ./kafka-connect:/connectors:ro
+    entrypoint: ["sh", "-c"]
+    command:
+      - |
+        echo "Waiting for Kafka Connect REST API..."
+        until curl -s -f http://kafka-connect:8083/connectors > /dev/null; do sleep 5; done
+        sleep 5
+        echo "Registering mqtt-telemetry-source..."
+        curl -s -X POST -H "Content-Type: application/json" --data @/connectors/mqtt-telemetry-source.json http://kafka-connect:8083/connectors
+        echo "Registering mqtt-events-source..."
+        curl -s -X POST -H "Content-Type: application/json" --data @/connectors/mqtt-events-source.json http://kafka-connect:8083/connectors
+        echo "Registering mqtt-commands-sink..."
+        curl -s -X POST -H "Content-Type: application/json" --data @/connectors/mqtt-commands-sink.json http://kafka-connect:8083/connectors
+        echo "Done."
+    restart: "no"
+
+  timescaledb:
+    image: timescale/timescaledb:latest-pg16
+    container_name: {{ project_slug }}-timescaledb
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: smartgrid_dt
+      POSTGRES_USER: dt_user
+      POSTGRES_PASSWORD: dt_password
+    volumes:
+      - timescale-data:/var/lib/postgresql/data
+      - ./timescaledb/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: {{ project_slug }}-grafana
+    depends_on:
+      - timescaledb
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    volumes:
+      - grafana-data:/var/lib/grafana
+
+  edge-simulator:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: {{ project_slug }}-edge-simulator
+    depends_on:
+      - mosquitto
+    environment:
+      MQTT_HOST: mosquitto
+      MQTT_PORT: "1883"
+      CONTROL_MODE: observe  # "observe" = καμία διορθωτική ενέργεια· οι ανωμαλίες παραμένουν
+                              # ορατές για ανίχνευση. Άλλαξέ το σε "active" για κανονικό έλεγχο.
+    command: ["python", "-u", "edge_simulator.py"]
+    restart: unless-stopped
+
+  persistence-consumer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: {{ project_slug }}-persistence-consumer
+    depends_on:
+      - kafka
+      - timescaledb
+      - connector-init
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      TIMESCALE_DSN: "host=timescaledb port=5432 dbname=smartgrid_dt user=dt_user password=dt_password"
+    command: ["python", "-u", "persistence_consumer.py"]
+    restart: unless-stopped
+
+  analytics-consumer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: {{ project_slug }}-analytics-consumer
+    depends_on:
+      - kafka
+      - connector-init
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      ANALYTICS_SQLITE_PATH: /data/graph_topology_dt.db
+    volumes:
+      - analytics-data:/data
+    command: ["python", "-u", "analytics_consumer.py"]
+    restart: unless-stopped
+
+volumes:
+  mosquitto-data:
+  mosquitto-log:
+  kafka-data:
+  timescale-data:
+  grafana-data:
+  analytics-data:

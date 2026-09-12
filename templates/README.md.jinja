@@ -1,0 +1,84 @@
+# Digital Twin — {{ grid_name }}
+
+Αυτόματα παραγόμενο project από `generate_twin.py`, σύμφωνα με την αρχιτεκτονική
+`arxitektoniki.drawio` (Edge Simulator → MQTT → Kafka Connect → Kafka →
+Persistence/Analytics Consumers → TimescaleDB/SQLite → Grafana), με πλήρη
+containerization όλων των custom services.
+
+## Δομή
+
+- `edge_simulator.py` — φυσική προσομοίωση + local closed-loop control, δημοσιεύει
+  τηλεμετρία μέσω MQTT στο topic `{{ mqtt_topic_prefix }}/<node_id>`, events
+  τοπολογίας στο `{{ mqtt_events_topic }}`, και ακούει supervisory εντολές στο
+  `{{ mqtt_commands_topic }}`.
+- `persistence_consumer.py` — Kafka consumer (`{{ kafka_topic_raw }}`) → TimescaleDB.
+- `analytics_consumer.py` — Kafka consumer (`{{ kafka_topic_raw }}`, `{{ kafka_topic_events }}`)
+  → ανίχνευση ανωμαλιών → SQLite (`digital_twin_alerts`) + republish στο `{{ kafka_topic_alerts }}`
+  + supervisory εντολές στο `{{ kafka_topic_commands }}` όταν εντοπίζεται CRITICAL ανωμαλία.
+- `Dockerfile` — κοινό image για τα τρία custom Python services.
+- `kafka-connect.Dockerfile` — Kafka Connect με το MQTT connector plugin ήδη ενσωματωμένο
+  (build-time install, όχι σε κάθε εκκίνηση).
+- `docker-compose.yml` — Mosquitto, Kafka (KRaft), Kafka Connect, TimescaleDB, Grafana,
+  και τα τρία custom services (edge-simulator, persistence-consumer, analytics-consumer),
+  όλα ως containers.
+- `kafka-connect/mqtt-telemetry-source.json`, `mqtt-events-source.json` — source connectors
+  MQTT → Kafka.
+- `kafka-connect/mqtt-commands-sink.json` — sink connector Kafka (`{{ kafka_topic_commands }}`)
+  → MQTT (`{{ mqtt_commands_topic }}`), για το supervisory feedback loop.
+- `timescaledb/init.sql` — δημιουργεί το hypertable `telemetry_metrics_raw`.
+
+## Εκτέλεση
+
+```bash
+docker compose up -d --build
+```
+
+Αυτό είναι το **μόνο** βήμα που χρειάζεται πλέον: το `connector-init` service
+περιμένει να είναι έτοιμο το Kafka Connect REST API και καταχωρεί αυτόματα και
+τους τρεις connectors (πριν γινόταν χειροκίνητα με `curl`).
+
+Παρακολούθηση:
+```bash
+docker compose ps -a
+docker compose logs -f edge-simulator
+```
+
+**Windows helper**: μετά το πρώτο `docker compose up -d --build`, τις επόμενες
+φορές μπορείς να τρέχεις απλά `.\start_monitor.ps1` — σηκώνει τα containers
+*και* ανοίγει αυτόματα 2 ξεχωριστά παράθυρα με ζωντανά logs (τηλεμετρία +
+ανωμαλίες), χωρίς να χρειάζεται να τα πληκτρολογείς χειροκίνητα κάθε φορά.
+
+Σενάριο cascading failure (τρέχεται μέσα στο container του edge-simulator):
+```bash
+docker compose run --rm edge-simulator python edge_simulator.py --fail-line <line_id_1> <line_id_2>
+```
+
+Grafana: http://localhost:3000 (admin/admin) — πρόσθεσε PostgreSQL data source
+προς `timescaledb:5432`, database `smartgrid_dt`, για dashboards πάνω στο
+`telemetry_metrics_raw`.
+
+## Σημείωση για την άδεια χρήσης του MQTT connector
+
+Ο connector `confluentinc/kafka-connect-mqtt` είναι proprietary (Confluent). Χωρίς
+`confluent.license` property, ενεργοποιείται αυτόματα **δωρεάν trial 30 ημερών**
+(αρκετό για ανάπτυξη/υπεράσπιση διπλωματικής). Για μόνιμη χρήση μετά τις 30 μέρες
+χρειάζεται είτε license key, είτε αντικατάσταση με μια open-source εναλλακτική
+(π.χ. `evokly/kafka-connect-mqtt` στο GitHub).
+
+## Σημείωση αρχιτεκτονικής — δύο επίπεδα ελέγχου
+
+**Γρήγορος τοπικός βρόχος (ms latency):** το battery dispatch / load shedding
+παραμένει τοπικά στο `edge_simulator.py` (`compute_local_control_actions()`),
+γιατί δεν μπορεί να περιμένει το Kafka round-trip.
+
+**Αργός supervisory βρόχος (feedback loop, δευτερόλεπτα):** όταν το
+`analytics_consumer.py` εντοπίζει CRITICAL ανωμαλία (π.χ. `CRITICAL_LOW_FREQUENCY`),
+δημοσιεύει μια εντολή επίβλεψης στο Kafka topic `{{ kafka_topic_commands }}`. Αυτή
+γεφυρώνεται μέσω Kafka Connect MQTT Sink Connector στο MQTT topic
+`{{ mqtt_commands_topic }}`, και ο `edge_simulator.py` την καταναλώνει ως
+προαιρετική επικάλυψη (`apply_supervisory_override()`) πάνω στον τοπικό του
+έλεγχο, με TTL 10 δευτερολέπτων ώστε να μην εφαρμόζονται "μπαγιάτικες" εντολές.
+
+Η ανίχνευση ανωμαλιών/alerting παραμένει πλήρως downstream στο
+`analytics_consumer.py`, πάνω στο ήδη-δημοσιευμένο telemetry stream — δεν
+ξανατρέχει τη φυσική προσομοίωση.

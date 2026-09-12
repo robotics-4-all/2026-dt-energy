@@ -1,0 +1,40 @@
+PowerGrid TILOS_GRID
+gridName: "Tilos Hybrid Microgrid"
+region: "Dodecanese"
+end
+
+SubStation HUB_01
+id: "HUB-01"
+name: "Tilos S4S Control Hub"
+voltageLevel: 20.0
+status: ACTIVE
+congestionLevel: 0.0
+lines {
+    PowerLine L_WIND
+    id: "L-WIND"
+    lengthKM: 2.5
+    maxCapacityMW: 2.0
+    source: HUB_01
+    target: HUB_01
+    end
+}
+end
+
+WindFarm W1_ENERCON
+id: "W1-ENERCON"
+name: "Enercon E-82 Plaka"
+voltageLevel: 20.0
+status: ACTIVE
+measuredVoltage: 20.0
+measuredCurrent: 23.0
+powerFactor: 0.95
+frequency: 50.0
+activePower: 0.75
+reactivePower: 0.15
+lastUpdate: "2026-06-11"
+isControllable: True
+maxCapacityMW: 0.8
+currentOutputMW: 0.75
+windSpeed: 12.5
+turbineCount: 1
+end

@@ -1,0 +1,131 @@
+PowerGrid PTL_GRID
+gridName: "Ptolemaida-Kozani Industrial Hub"
+region: "Western Macedonia"
+end
+
+SubStation KYT_400_PTL
+id: "KYT-400-PTL"
+name: "Ptolemaida High Voltage Substation"
+voltageLevel: 400.0
+status: ACTIVE
+congestionLevel: 0.12
+lines {
+    PowerLine LINE_GEN_V
+    id: "LINE-GEN-V"
+    lengthKM: 1.5
+    maxCapacityMW: 1000.0
+    source: KYT_400_PTL
+    target: PTL_V_STATION
+    end
+}
+end
+
+ThermalPlant PTL_V_STATION
+id: "PTL-V-STATION"
+name: "Ptolemaida Unit V"
+voltageLevel: 400.0
+status: ACTIVE
+measuredVoltage: 400.0
+measuredCurrent: 880.0
+powerFactor: 0.98
+frequency: 50.0
+activePower: 610.0
+reactivePower: 120.0
+lastUpdate: "2026-06-11"
+isControllable: true
+maxCapacityMW: 660.0
+currentOutputMW: 610.0
+fuelType: "Lignite"
+efficiency: 0.415
+thermalOutputMW: 1590.0
+co2SpecificEmissions: 0.95
+end
+
+GlobalDistributions PTL_GRID_DEFAULTS
+wind_speed: WEIBULL(shape=2.0, scale=9.5)
+solar_noise: NORMAL(mu=0.0, sigma=0.02)
+load_noise: NORMAL(mu=0.0, sigma=0.03)
+end
+
+ClassDistributions PTL_INDUSTRIAL_LOAD
+appliesTo: Industrial
+load_noise: NORMAL(mu=0.0, sigma=0.02)
+end
+
+WindFarm KOZANI_WIND_1
+id: "WIND-KOZANI-1"
+name: "Kozani Ridge Wind Farm"
+voltageLevel: 150.0
+status: ACTIVE
+measuredVoltage: 150.0
+measuredCurrent: 320.0
+powerFactor: 0.95
+frequency: 50.0
+activePower: 0.0
+reactivePower: 0.0
+lastUpdate: "2026-06-11"
+isControllable: false
+maxCapacityMW: 80.0
+currentOutputMW: 0.0
+windSpeed: 8.6
+turbineCount: 18
+distributions {
+    wind_speed: WEIBULL(shape=1.7, scale=10.2)
+}
+end
+
+SolarPark PTOLEMAIDA_SOLAR_1
+id: "SOLAR-PTL-1"
+name: "Ptolemaida Reclaimed Mine Solar Park"
+voltageLevel: 20.0
+status: ACTIVE
+measuredVoltage: 20.0
+measuredCurrent: 950.0
+powerFactor: 0.97
+frequency: 50.0
+activePower: 0.0
+reactivePower: 0.0
+lastUpdate: "2026-06-11"
+isControllable: false
+maxCapacityMW: 50.0
+currentOutputMW: 0.0
+panelType: "Monocrystalline"
+cloudCover: 0.22
+end
+
+Residential KOZANI_RESIDENTIAL_1
+id: "RES-KOZANI-1"
+name: "Kozani Residential Feeder"
+voltageLevel: 0.4
+status: ACTIVE
+measuredVoltage: 0.4
+measuredCurrent: 180.0
+powerFactor: 0.92
+frequency: 50.0
+activePower: 4.5
+reactivePower: 1.8
+lastUpdate: "2026-06-11"
+isControllable: true
+demandMW: 5.0
+currentConsumption: 4.5
+numberOfResidents: 850
+hasSmartAppliances: true
+end
+
+Industrial PTOLEMAIDA_INDUSTRIAL_1
+id: "IND-PTL-1"
+name: "Ptolemaida Industrial Park"
+voltageLevel: 20.0
+status: ACTIVE
+measuredVoltage: 20.0
+measuredCurrent: 1450.0
+powerFactor: 0.90
+frequency: 50.0
+activePower: 28.0
+reactivePower: 12.0
+lastUpdate: "2026-06-11"
+isControllable: true
+demandMW: 30.0
+currentConsumption: 28.0
+industryType: "Lignite Processing"
+end

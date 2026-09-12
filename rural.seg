@@ -1,0 +1,39 @@
+PowerGrid RURAL_GRID
+gridName: "Thessaly Rural Distribution Grid"
+region: "Thessaly"
+end
+
+SubStation SUB_RURAL_DIST
+id: "SUB-RURAL-DIST"
+name: "Local Rural Distribution Substation"
+voltageLevel: 20.0
+status: ACTIVE
+congestionLevel: 0.05
+lines {
+    PowerLine L_RURAL_PUMPS
+    id: "L-RURAL-PUMPS"
+    lengthKM: 3.2
+    maxCapacityMW: 1.0
+    source: SUB_RURAL_DIST
+    target: SUB_RURAL_DIST
+    end
+}
+end
+
+Industrial IND_RURAL_PUMPS
+id: "IND-RURAL-PUMPS"
+name: "Agricultural Irrigation Pumping Stations"
+voltageLevel: 20.0
+status: ACTIVE
+measuredVoltage: 20.0
+measuredCurrent: 4.3
+powerFactor: 0.90
+frequency: 50.0
+activePower: 0.15
+reactivePower: 0.07
+lastUpdate: "2026-06-11"
+isControllable: False
+demandMW: 0.15
+currentConsumption: 0.15
+industryType: "Agricultural Irrigation"
+end

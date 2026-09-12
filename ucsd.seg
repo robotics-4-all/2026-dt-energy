@@ -1,0 +1,42 @@
+PowerGrid UCSD_GRID
+gridName: "UCSD Mission-Critical Microgrid"
+region: "California"
+end
+
+SubStation SUB_UCSD_MAIN
+id: "SUB-UCSD-MAIN"
+name: "UCSD Main Cogeneration Substation"
+voltageLevel: 12.0
+status: ACTIVE
+congestionLevel: 0.65
+lines {
+    PowerLine L_UCSD_CHP
+    id: "L-UCSD-CHP"
+    lengthKM: 0.3
+    maxCapacityMW: 40.0
+    source: SUB_UCSD_MAIN
+    target: SUB_UCSD_MAIN
+    end
+}
+end
+
+ThermalPlant UCSD_CHP_GAS
+id: "UCSD-CHP-GAS"
+name: "Combined Heat and Power Gas Turbine"
+voltageLevel: 12.0
+status: ACTIVE
+measuredVoltage: 12.0
+measuredCurrent: 1250.0
+powerFactor: 0.96
+frequency: 60.0
+activePower: 24.0
+reactivePower: 7.0
+lastUpdate: "2026-06-11"
+isControllable: True
+maxCapacityMW: 30.0
+currentOutputMW: 24.0
+fuelType: "Natural Gas"
+efficiency: 0.42
+thermalOutputMW: 35.0
+co2SpecificEmissions: 0.45
+end

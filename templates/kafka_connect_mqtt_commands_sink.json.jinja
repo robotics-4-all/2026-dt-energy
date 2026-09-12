@@ -1,0 +1,18 @@
+{
+  "name": "{{ project_slug }}-mqtt-commands-sink",
+  "config": {
+    "connector.class": "io.confluent.connect.mqtt.MqttSinkConnector",
+    "tasks.max": "1",
+    "topics": "{{ kafka_topic_commands }}",
+    "mqtt.server.uri": "tcp://mosquitto:1883",
+    "confluent.topic.bootstrap.servers": "kafka:29092",
+    "confluent.topic.replication.factor": "1",
+    "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+    "value.converter": "org.apache.kafka.connect.storage.StringConverter",
+    "transforms": "renameTopic",
+    "transforms.renameTopic.type": "org.apache.kafka.connect.transforms.RegexRouter",
+    "transforms.renameTopic.regex": "{{ kafka_topic_commands | replace('.', '\\\\.') }}",
+    "transforms.renameTopic.replacement": "{{ mqtt_commands_topic }}",
+    "_comment": "Ο sink connector δημοσιεύει με προεπιλογή στο MQTT topic που έχει το ίδιο όνομα με το Kafka topic· το RegexRouter μετονομάζει control.commands -> grid/commands/{{ project_slug }} ώστε ο edge_simulator.py να το βρίσκει στο σωστό namespace."
+  }
+}
