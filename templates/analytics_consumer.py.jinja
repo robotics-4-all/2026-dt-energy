@@ -30,7 +30,9 @@ Sink Connector στο MQTT topic "{{ mqtt_commands_topic }}" και κατανα
 import json
 import os
 import sqlite3
+import statistics
 import threading
+from collections import defaultdict, deque
 from datetime import datetime, timezone
 
 from kafka import KafkaConsumer, KafkaProducer
@@ -47,6 +49,54 @@ SQLITE_PATH = os.environ.get("ANALYTICS_SQLITE_PATH", "graph_topology_dt.db")
 QUALITY_THRESHOLD_LOW_F = 49.95
 CONGESTION_CRITICAL_THRESHOLD = 0.85
 ALERT_COOLDOWN_S = float(os.environ.get("ALERT_COOLDOWN_S", "30"))
+
+# Πολυεπίπεδη (σταδιακή) αποκοπή φορτίου λόγω χαμηλής συχνότητας,
+# κατ' αναλογία των πραγματικών σχημάτων UFLS (Underfrequency Load
+# Shedding) που περιγράφει το Lakshminarayana et al. 2022 (arXiv:2201.10505)
+# για ERCOT/NYISO/NERC. Το δικό μας δίκτυο είναι 50Hz (ευρωπαϊκό), ενώ τα
+# ERCOT/NYISO αναφέρονται σε 60Hz σύστημα — μεταφέρουμε την ΑΝΑΛΟΓΙΚΗ
+# απόκλιση (% από την ονομαστική τιμή), όχι τις απόλυτες τιμές Hz.
+# Το ERCOT ξεκινά αποκοπή στο -1.17% της ονομαστικής συχνότητας (59.3/60),
+# με επιπλέον στάδια στο -1.83% (58.9/60) και -2.5% (58.5/60), αποκόπτοντας
+# διαδοχικά 5%, 10%, 10% του φορτίου.
+NOMINAL_FREQUENCY_HZ = 50.0
+FREQ_STAGE_1_HZ = 49.42   # ~ -1.17% (αναλογία ERCOT 59.3/60Hz) -> shed 5%
+FREQ_STAGE_2_HZ = 49.09   # ~ -1.83% (αναλογία ERCOT 58.9/60Hz) -> shed +10%
+FREQ_STAGE_3_HZ = 48.75   # ~ -2.5%  (αναλογία ERCOT 58.5/60Hz) -> shed +10%
+
+# Όρια SOC μπαταρίας (overdischarge / overcharge). Βασισμένα σε τυπικά
+# ασφαλή περιθώρια λειτουργίας BESS που αναφέρονται στη βιβλιογραφία
+# (π.χ. Pang & Ohno 2025· BESS-Enabled Smart Grid Environments, 2025):
+# η παραβίαση αυτών των ορίων λόγω overcharge/overdischarge είναι γνωστός
+# προάγγελος βραχυκυκλωμάτων και thermal runaway.
+SOC_CRITICAL_LOW = 0.10
+SOC_WARNING_LOW = 0.20
+SOC_WARNING_HIGH = 0.90
+SOC_CRITICAL_HIGH = 0.95
+
+# Στατιστικό όριο απόκλισης τάσης ανά κόμβο, βασισμένο σε rolling Z-score
+# πάνω σε κυλιόμενο παράθυρο (window) παρατηρήσεων. Το κατώφλι |Z|>3
+# επιβεβαιώνεται ανεξάρτητα σε δύο διαφορετικά πεδία της βιβλιογραφίας:
+# Pang et al. 2025 (SD/Z-score μ±3σ σε ανίχνευση ανωμαλιών μπαταρίας) και
+# Hannon et al. 2019 (min-max threshold 3σ για τάση σε PMU δεδομένα,
+# ευθυγραμμισμένο με τις οδηγίες του NREL). Χρησιμοποιούμε rolling window
+# ανά κόμβο αντί για απόλυτο κατώφλι, αφού διαφορετικοί τύποι κόμβων
+# (π.χ. υποσταθμός 400kV έναντι φωτοβολταϊκού 20kV) έχουν εντελώς
+# διαφορετική ονομαστική τάση — το Z-score είναι αδιάστατο και άρα
+# μεταφέρσιμο (transferable) μεταξύ κόμβων διαφορετικής κλίμακας.
+VOLTAGE_ZSCORE_WINDOW = 30       # πλήθος πρόσφατων δειγμάτων στο rolling window
+VOLTAGE_ZSCORE_MIN_SAMPLES = 10  # ελάχιστα δείγματα πριν αξιολογηθεί Z-score (αποφυγή
+                                  # τεχνητά μικρού std από λίγα, τυχαία κοντινά δείγματα)
+VOLTAGE_ZSCORE_MIN_STD_FRACTION = 0.005  # κατώτατο std ως κλάσμα της μέσης τιμής (0.5%),
+                                          # ώστε φυσιολογικά "ήσυχες" περίοδοι να μην
+                                          # παράγουν τεχνητά υπερευαίσθητο Z-score
+VOLTAGE_ZSCORE_WARNING = 2.0     # ήπια απόκλιση
+VOLTAGE_ZSCORE_CRITICAL = 3.0    # Pang et al. 2025 / Hannon et al. 2019
+VOLTAGE_PERSISTENCE_SAMPLES = 2  # απαιτούμενα συνεχόμενα δείγματα πάνω από το
+                                  # όριο πριν καταγραφεί alert — αποτρέπει μεμονωμένες,
+                                  # τυχαίες υπερβάσεις (θόρυβος) από το να ενεργοποιούν
+                                  # alert, αφού με |Z|>2 περίπου 4.5% των φυσιολογικών
+                                  # δειγμάτων θα το ξεπερνούν καθαρά τυχαία.
 
 
 def init_db(path):
@@ -70,17 +120,31 @@ class AnalyticsEngine:
     def __init__(self, sqlite_conn, kafka_producer):
         self.conn = sqlite_conn
         self.producer = kafka_producer
-        self._last_alert_at = {}  # anomaly_type -> monotonic timestamp, για cooldown
+        self._last_alert_at = {}  # (anomaly_type, node_id) -> monotonic timestamp, για cooldown
+        self._voltage_window = defaultdict(lambda: deque(maxlen=VOLTAGE_ZSCORE_WINDOW))  # node_id -> τελευταίες τιμές τάσης
+        self._voltage_warning_streak = defaultdict(int)   # node_id -> συνεχόμενα δείγματα πάνω από WARNING
+        self._voltage_critical_streak = defaultdict(int)  # node_id -> συνεχόμενα δείγματα πάνω από CRITICAL
 
-    def _should_alert(self, anomaly_type):
-        """Αποτρέπει το ίδιο anomaly_type να καταγράφεται κάθε δευτερόλεπτο
-        όσο επιμένει η συνθήκη· επιτρέπει νέο alert μόνο μετά το cooldown."""
+    def _should_alert(self, anomaly_type, node_id):
+        """Αποτρέπει το ίδιο anomaly_type στον ίδιο κόμβο να καταγράφεται
+        κάθε δευτερόλεπτο όσο επιμένει η συνθήκη· επιτρέπει νέο alert μόνο
+        μετά το cooldown. Το κλειδί περιλαμβάνει node_id ώστε ταυτόχρονες
+        ανωμαλίες σε διαφορετικούς κόμβους να μην κρύβει η μία την άλλη.
+
+        ΣΗΜΑΝΤΙΚΟ: το time.monotonic() ΔΕΝ ξεκινάει από το 0 — μετράει από
+        ένα αυθαίρετο σημείο αναφοράς (συχνά την εκκίνηση του συστήματος/
+        container). Αν χρησιμοποιούσαμε default τιμή 0.0 για το 'last' σε
+        μη-υπαρκτό key, τότε στα πρώτα ALERT_COOLDOWN_S δευτερόλεπτα μετά
+        την εκκίνηση του container, ΚΑΘΕ πρώτο alert κάθε τύπου θα
+        θεωρούνταν λανθασμένα ότι βρίσκεται ήδη σε cooldown και θα
+        αγνοούνταν σιωπηλά. Γι' αυτό ελέγχουμε ρητά αν το key υπάρχει ήδη."""
         import time as _time
         now = _time.monotonic()
-        last = self._last_alert_at.get(anomaly_type, 0.0)
-        if now - last < ALERT_COOLDOWN_S:
+        key = (anomaly_type, node_id)
+        last = self._last_alert_at.get(key)
+        if last is not None and now - last < ALERT_COOLDOWN_S:
             return False
-        self._last_alert_at[anomaly_type] = now
+        self._last_alert_at[key] = now
         return True
 
     def log_alert(self, timestamp, node_id, anomaly_type, severity, control_action, action_value):
@@ -123,23 +187,98 @@ class AnalyticsEngine:
         # φορά ανά βήμα, πάνω σε έναν representative κόμβο (SubStation),
         # αλλιώς θα καταγράφαμε N πανομοιότυπα alerts (ένα ανά κόμβο) για
         # το ίδιο ακριβώς γεγονός.
+        #
+        # Σταδιακή (3-tier) αποκοπή φορτίου, κατ' αναλογία πραγματικών
+        # σχημάτων UFLS (Lakshminarayana et al. 2022): κάθε στάδιο πιο
+        # σοβαρής πτώσης συχνότητας αυξάνει σωρευτικά το ποσοστό αποκοπής,
+        # αντί για ένα μοναδικό CRITICAL κατώφλι.
         if frequency is not None and payload.get('node_type') == 'SubStation':
-            if frequency < 49.0 and self._should_alert("CRITICAL_LOW_FREQUENCY"):
-                self.log_alert(timestamp, node_id, "CRITICAL_LOW_FREQUENCY", "CRITICAL",
-                                "Emergency Load Shedding", 0.40)
-                self.send_command(node_id, "force_load_shedding", 0.40, "CRITICAL_LOW_FREQUENCY")
-            elif frequency < QUALITY_THRESHOLD_LOW_F and self._should_alert("WARNING_LOW_FREQUENCY"):
+            if frequency < FREQ_STAGE_3_HZ and self._should_alert("CRITICAL_LOW_FREQUENCY_STAGE3", node_id):
+                self.log_alert(timestamp, node_id, "CRITICAL_LOW_FREQUENCY_STAGE3", "CRITICAL",
+                                "Emergency Load Shedding Stage 3", 0.25)
+                self.send_command(node_id, "force_load_shedding", 0.25, "CRITICAL_LOW_FREQUENCY_STAGE3")
+            elif frequency < FREQ_STAGE_2_HZ and self._should_alert("CRITICAL_LOW_FREQUENCY_STAGE2", node_id):
+                self.log_alert(timestamp, node_id, "CRITICAL_LOW_FREQUENCY_STAGE2", "CRITICAL",
+                                "Emergency Load Shedding Stage 2", 0.15)
+                self.send_command(node_id, "force_load_shedding", 0.15, "CRITICAL_LOW_FREQUENCY_STAGE2")
+            elif frequency < FREQ_STAGE_1_HZ and self._should_alert("CRITICAL_LOW_FREQUENCY_STAGE1", node_id):
+                self.log_alert(timestamp, node_id, "CRITICAL_LOW_FREQUENCY_STAGE1", "CRITICAL",
+                                "Emergency Load Shedding Stage 1", 0.05)
+                self.send_command(node_id, "force_load_shedding", 0.05, "CRITICAL_LOW_FREQUENCY_STAGE1")
+            elif frequency < QUALITY_THRESHOLD_LOW_F and self._should_alert("WARNING_LOW_FREQUENCY", node_id):
                 self.log_alert(timestamp, node_id, "WARNING_LOW_FREQUENCY", "WARNING",
                                 "Battery Injection", 0.25)
-            elif frequency > 50.05 and self._should_alert("WARNING_HIGH_FREQUENCY"):
+            elif frequency > 50.05 and self._should_alert("WARNING_HIGH_FREQUENCY", node_id):
                 self.log_alert(timestamp, node_id, "WARNING_HIGH_FREQUENCY", "WARNING",
                                 "Battery Absorption", 0.15)
 
         if payload.get('node_type') == 'SubStation' and congestion_level is not None:
-            if congestion_level > CONGESTION_CRITICAL_THRESHOLD and self._should_alert("CRITICAL_CONGESTION"):
+            if congestion_level > CONGESTION_CRITICAL_THRESHOLD and self._should_alert("CRITICAL_CONGESTION", node_id):
                 self.log_alert(timestamp, node_id, "CRITICAL_CONGESTION", "CRITICAL",
                                 "Congestion Handling", congestion_level)
                 self.send_command(node_id, "force_curtail_thermal", 1.0, "CRITICAL_CONGESTION")
+
+        # --- Ανωμαλίες μπαταρίας: overdischarge / overcharge (SOC) ---
+        state_of_charge = payload.get('state_of_charge')
+        if payload.get('node_type') == 'BatteryStorage' and state_of_charge is not None:
+            if state_of_charge < SOC_CRITICAL_LOW and self._should_alert("CRITICAL_LOW_SOC", node_id):
+                self.log_alert(timestamp, node_id, "CRITICAL_LOW_SOC", "CRITICAL",
+                                "Stop Discharge", state_of_charge)
+                self.send_command(node_id, "stop_discharge", 0.0, "CRITICAL_LOW_SOC")
+            elif state_of_charge < SOC_WARNING_LOW and self._should_alert("WARNING_LOW_SOC", node_id):
+                self.log_alert(timestamp, node_id, "WARNING_LOW_SOC", "WARNING",
+                                "Reduce Discharge Rate", state_of_charge)
+            elif state_of_charge > SOC_CRITICAL_HIGH and self._should_alert("CRITICAL_HIGH_SOC", node_id):
+                self.log_alert(timestamp, node_id, "CRITICAL_HIGH_SOC", "CRITICAL",
+                                "Stop Charge", state_of_charge)
+                self.send_command(node_id, "stop_charge", 0.0, "CRITICAL_HIGH_SOC")
+            elif state_of_charge > SOC_WARNING_HIGH and self._should_alert("WARNING_HIGH_SOC", node_id):
+                self.log_alert(timestamp, node_id, "WARNING_HIGH_SOC", "WARNING",
+                                "Reduce Charge Rate", state_of_charge)
+
+        # --- Απόκλιση τάσης: rolling Z-score ανά κόμβο (|Z|>3, βλ. σχόλιο
+        # στα constants — συγκλίνουσα τεκμηρίωση Pang et al. 2025 / Hannon
+        # et al. 2019). Χρειάζονται τουλάχιστον VOLTAGE_ZSCORE_MIN_SAMPLES
+        # δείγματα στο window πριν αξιολογηθεί το Z-score, αλλιώς το std
+        # υπολογίζεται από πολύ λίγα σημεία και γίνεται τεχνητά μικρό,
+        # παράγοντας ψευδώς θετικά. Επιπλέον, απαιτούμε η απόκλιση να
+        # επιμείνει για VOLTAGE_PERSISTENCE_SAMPLES συνεχόμενα δείγματα
+        # πριν καταγραφεί alert, ώστε μεμονωμένες τυχαίες υπερβάσεις
+        # (αναμενόμενες σε ~4.5% των δειγμάτων για |Z|>2 σε κανονική
+        # κατανομή) να μην πλημμυρίζουν το log.
+        voltage = payload.get('voltage')
+        if voltage is not None and voltage > 0:
+            window = self._voltage_window[node_id]
+            if len(window) >= VOLTAGE_ZSCORE_MIN_SAMPLES:
+                mean_v = statistics.mean(window)
+                std_v = statistics.pstdev(window)
+                # Κατώτατο όριο στο std ώστε ένα φυσιολογικά "ήσυχο" διάστημα
+                # (πολύ μικρό πραγματικό std) να μην κάνει το Z-score
+                # υπερευαίσθητο σε μικρές, φυσιολογικές διακυμάνσεις.
+                std_floor = abs(mean_v) * VOLTAGE_ZSCORE_MIN_STD_FRACTION
+                std_v = max(std_v, std_floor)
+                if std_v > 0:
+                    z = abs(voltage - mean_v) / std_v
+
+                    if z > VOLTAGE_ZSCORE_CRITICAL:
+                        self._voltage_critical_streak[node_id] += 1
+                        self._voltage_warning_streak[node_id] += 1
+                    elif z > VOLTAGE_ZSCORE_WARNING:
+                        self._voltage_critical_streak[node_id] = 0
+                        self._voltage_warning_streak[node_id] += 1
+                    else:
+                        self._voltage_critical_streak[node_id] = 0
+                        self._voltage_warning_streak[node_id] = 0
+
+                    if (self._voltage_critical_streak[node_id] >= VOLTAGE_PERSISTENCE_SAMPLES
+                            and self._should_alert("CRITICAL_VOLTAGE_DEVIATION", node_id)):
+                        self.log_alert(timestamp, node_id, "CRITICAL_VOLTAGE_DEVIATION", "CRITICAL",
+                                        "Voltage Regulation", voltage)
+                    elif (self._voltage_warning_streak[node_id] >= VOLTAGE_PERSISTENCE_SAMPLES
+                            and self._should_alert("WARNING_VOLTAGE_DEVIATION", node_id)):
+                        self.log_alert(timestamp, node_id, "WARNING_VOLTAGE_DEVIATION", "WARNING",
+                                        "Monitor Voltage", voltage)
+            window.append(voltage)
 
 
 def safe_json_deserialize(raw_bytes):
