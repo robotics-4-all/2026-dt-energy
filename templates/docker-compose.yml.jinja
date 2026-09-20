@@ -141,10 +141,12 @@ services:
     container_name: {{ project_slug }}-analytics-consumer
     depends_on:
       - kafka
+      - timescaledb
       - connector-init
     environment:
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       ANALYTICS_SQLITE_PATH: /data/graph_topology_dt.db
+      TIMESCALE_DSN: "host=timescaledb port=5432 dbname=smartgrid_dt user=dt_user password=dt_password"
     volumes:
       - analytics-data:/data
     command: ["python", "-u", "analytics_consumer.py"]
