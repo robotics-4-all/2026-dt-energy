@@ -1,0 +1,15 @@
+{
+  "name": "{{ project_slug }}-mqtt-source",
+  "config": {
+    "connector.class": "org.apache.camel.kafkaconnector.mqtt.CamelMqttSourceConnector",
+    "tasks.max": "1",
+    "topics": "{{ kafka_topic_raw }}",
+    "camel.source.path.host": "mosquitto",
+    "camel.source.path.port": "1883",
+    "camel.source.endpoint.subscribeTopicNames": "{{ mqtt_topic_prefix }}/#",
+    "camel.source.maxPollDuration": "10000",
+    "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+    "value.converter": "org.apache.kafka.connect.storage.StringConverter",
+    "_comment_events_connector": "Register a second connector with the same class, subscribeTopicNames={{ mqtt_events_topic }} and topics={{ kafka_topic_events }} to also bridge topology events into Kafka."
+  }
+}

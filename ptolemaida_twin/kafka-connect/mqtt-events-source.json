@@ -1,0 +1,14 @@
+{
+  "name": "ptolemaida_kozani_industrial_hub-mqtt-events-source",
+  "config": {
+    "connector.class": "io.confluent.connect.mqtt.MqttSourceConnector",
+    "tasks.max": "1",
+    "mqtt.server.uri": "tcp://mosquitto:1883",
+    "mqtt.topics": "grid/events/ptolemaida_kozani_industrial_hub",
+    "kafka.topic": "grid.events",
+    "confluent.topic.bootstrap.servers": "kafka:29092",
+    "confluent.topic.replication.factor": "1",
+    "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+    "value.converter": "org.apache.kafka.connect.converters.ByteArrayConverter"
+  }
+}

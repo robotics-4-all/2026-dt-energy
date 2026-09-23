@@ -1,0 +1,68 @@
+PowerGrid ReactVisualMicrogrid
+    gridName: "React Visual Microgrid"
+    region: "Attica Hub"
+end
+
+SubStation SubStation_1_777
+    id: "SubStation_1_777"
+    name: "SubStation"
+    voltageLevel: 20.0
+    status: ACTIVE
+    congestionLevel: 0.0
+end
+
+BatteryStorage BatteryStorage_3_320
+    id: "BatteryStorage_3_320"
+    name: "Battery Storage"
+    voltageLevel: 20.0
+    status: ACTIVE
+    capacityMWh: 5.0
+    stateOfCharge: 80.0
+    lines {
+        PowerLine line_BatteryStorage_3_320_1
+            id: "L_BatteryStorage_3_320_1"
+            lengthKM: 10.5
+            maxCapacityMW: 30.0
+            source: BatteryStorage_3_320
+            target: SubStation_1_777
+        end
+    }
+end
+
+WindFarm WindFarm_2_958
+    id: "WindFarm_2_958"
+    name: "Wind Farm"
+    voltageLevel: 20.0
+    status: ACTIVE
+    measuredVoltage: 20.0
+    measuredCurrent: 10.0
+    powerFactor: 0.9
+    frequency: 50.0
+    activePower: 1.5
+    reactivePower: 0.2
+    lastUpdate: "2026-06-30"
+    isControllable: True
+    maxCapacityMW: 20.0
+    currentOutputMW: 11.2
+    windSpeed: 12.5
+    turbineCount: 8
+end
+
+Residential Residential_4_715
+    id: "Residential_4_715"
+    name: "Residential Load"
+    voltageLevel: 20.0
+    status: ACTIVE
+    measuredVoltage: 20.0
+    measuredCurrent: 10.0
+    powerFactor: 0.9
+    frequency: 50.0
+    activePower: 1.5
+    reactivePower: 0.2
+    lastUpdate: "2026-06-30"
+    isControllable: True
+    demandMW: 5.0
+    currentConsumption: 4.2
+    numberOfResidents: 250
+    hasSmartAppliances: True
+end

@@ -1,0 +1,40 @@
+PowerGrid TRK_GRID
+gridName: "Trikala Smart City Grid"
+region: "Thessaly"
+end
+
+SubStation SUB_TRK_MAIN
+id: "SUB-TRK-MAIN"
+name: "Trikala Central Urban Substation"
+voltageLevel: 20.0
+status: ACTIVE
+congestionLevel: 0.35
+lines {
+    PowerLine L_TRK_SOLAR
+    id: "L-TRK-SOLAR"
+    lengthKM: 1.2
+    maxCapacityMW: 3.0
+    source: SUB_TRK_MAIN
+    target: SUB_TRK_MAIN
+    end
+}
+end
+
+SolarPark TRK_PV_ROOFS
+id: "TRK-PV-ROOFS"
+name: "Distributed Rooftop Solar PVs"
+voltageLevel: 20.0
+status: ACTIVE
+measuredVoltage: 20.0
+measuredCurrent: 31.8
+powerFactor: 0.95
+frequency: 50.0
+activePower: 1.1
+reactivePower: 0.2
+lastUpdate: "2026-06-11"
+isControllable: True
+maxCapacityMW: 1.5
+currentOutputMW: 1.1
+panelType: "Monocrystalline"
+cloudCover: 0.2
+end

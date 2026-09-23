@@ -1,0 +1,18 @@
+{
+  "name": "ptolemaida_kozani_industrial_hub-mqtt-commands-sink",
+  "config": {
+    "connector.class": "io.confluent.connect.mqtt.MqttSinkConnector",
+    "tasks.max": "1",
+    "topics": "control.commands",
+    "mqtt.server.uri": "tcp://mosquitto:1883",
+    "confluent.topic.bootstrap.servers": "kafka:29092",
+    "confluent.topic.replication.factor": "1",
+    "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+    "value.converter": "org.apache.kafka.connect.storage.StringConverter",
+    "transforms": "renameTopic",
+    "transforms.renameTopic.type": "org.apache.kafka.connect.transforms.RegexRouter",
+    "transforms.renameTopic.regex": "control\\.commands",
+    "transforms.renameTopic.replacement": "grid/commands/ptolemaida_kozani_industrial_hub",
+    "_comment": "Ο sink connector δημοσιεύει με προεπιλογή στο MQTT topic που έχει το ίδιο όνομα με το Kafka topic· το RegexRouter μετονομάζει control.commands -> grid/commands/ptolemaida_kozani_industrial_hub ώστε ο edge_simulator.py να το βρίσκει στο σωστό namespace."
+  }
+}
