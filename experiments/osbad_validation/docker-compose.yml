@@ -1,0 +1,43 @@
+# Αυτοτελές, ελάχιστο stack για το Πείραμα 1 (OSBAD Battery Validation).
+# Ανεξάρτητο από κάθε digital twin (*_twin/) — δεν επηρεάζεται από
+# regeneration του .seg pipeline, και μπορεί να τρέχει ταυτόχρονα με
+# οποιοδήποτε twin χωρίς σύγκρουση (διαφορετικά ports).
+
+services:
+  timescaledb:
+    image: timescale/timescaledb:latest-pg16
+    container_name: osbad-validation-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: osbad_validation
+      POSTGRES_USER: osbad_user
+      POSTGRES_PASSWORD: osbad_password
+    ports:
+      - "5433:5432"   # διαφορετικό port από το twin (5432) ώστε να μη συγκρούεται
+    volumes:
+      - osbad_pgdata:/var/lib/postgresql/data
+      # Τα .sql αρχεία εδώ τρέχουν ΑΥΤΟΜΑΤΑ μία φορά, στην πρώτη εκκίνηση
+      # (όταν ο τόμος δεδομένων είναι άδειος):
+      - ./init-db:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U osbad_user -d osbad_validation"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  grafana:
+    image: grafana/grafana:11.1.0
+    container_name: osbad-validation-grafana
+    restart: unless-stopped
+    depends_on:
+      timescaledb:
+        condition: service_healthy
+    ports:
+      - "3001:3000"   # διαφορετικό port από το twin (3000) ώστε να μη συγκρούεται
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning
+      - osbad_grafana_data:/var/lib/grafana
+
+volumes:
+  osbad_pgdata:
+  osbad_grafana_data:

@@ -1,0 +1,20 @@
+# Αυτοτελές datasource, αποκλειστικά για το validation stack (osbad_validation.
+# ΔΕΝ έχει καμία σχέση με το datasource των digital twins).
+apiVersion: 1
+
+datasources:
+  - name: OSBAD-Validation-DB
+    type: postgres
+    access: proxy
+    url: timescaledb:5432
+    user: osbad_user
+    uid: timescaledb-dt
+    isDefault: true
+    editable: false
+    jsonData:
+      database: osbad_validation
+      sslmode: disable
+      postgresVersion: 1600
+      timescaledb: true
+    secureJsonData:
+      password: osbad_password
