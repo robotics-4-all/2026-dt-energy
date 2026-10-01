@@ -20,3 +20,30 @@ SELECT create_hypertable('telemetry_metrics_raw', 'timestamp', if_not_exists => 
 
 CREATE INDEX IF NOT EXISTS idx_telemetry_node_id
     ON telemetry_metrics_raw (node_id, "timestamp" DESC);
+
+-- Καταγραφή του Modified Z-score σε ΚΑΘΕ αξιολόγηση τάσης από τον
+-- analytics_consumer.py (όχι μόνο όταν σκάει alert) — ώστε να υπάρχει μια
+-- συνεχής, ζωντανή χρονοσειρά z-score στο Grafana, άμεσα συγκρίσιμη με το
+-- ανεξάρτητο OSBAD validation experiment (ίδιος αλγόριθμος, ίδια thresholds).
+-- Δημιουργείται εδώ (όχι μόνο στον analytics_consumer) ώστε το hypertable να
+-- υπάρχει σίγουρα πριν ξεκινήσει να γράφει ο consumer.
+CREATE TABLE IF NOT EXISTS voltage_zscore_eval (
+    "timestamp"   TIMESTAMPTZ       NOT NULL,
+    node_id       TEXT              NOT NULL,
+    voltage       DOUBLE PRECISION,
+    median_v      DOUBLE PRECISION,
+    mad_v         DOUBLE PRECISION,
+    z_score       DOUBLE PRECISION,
+    -- predicted_p2/predicted_p1: αν ο ανιχνευτής θα σήκωνε alert σε αυτό το
+    -- δείγμα, με persistence=2 (η προεπιλογή του συστήματος) και persistence=1
+    -- (χωρίς απαίτηση συνέχειας) αντίστοιχα — ίδιας σημασιολογίας με τις
+    -- στήλες "Predicted (p=2)"/"Predicted (p=1)" του OSBAD validation
+    -- πίνακα, ώστε οι δύο πίνακες να είναι απευθείας συγκρίσιμοι.
+    predicted_p2  BOOLEAN,
+    predicted_p1  BOOLEAN
+);
+
+SELECT create_hypertable('voltage_zscore_eval', 'timestamp', if_not_exists => TRUE);
+
+CREATE INDEX IF NOT EXISTS idx_voltage_zscore_eval_node_id
+    ON voltage_zscore_eval (node_id, "timestamp" DESC);

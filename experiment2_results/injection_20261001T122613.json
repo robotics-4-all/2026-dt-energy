@@ -1,0 +1,17 @@
+{
+  "experiment": "experiment2_point_anomaly",
+  "anomaly_type": "point",
+  "injected_at_utc": "2026-10-01T12:26:13.684631+00:00",
+  "node_id": "KYT-400-PTL",
+  "node_type": "SubStation",
+  "baseline_median_v": 400.605,
+  "baseline_mad_v": 3.187590000000008,
+  "injected_voltage": 464.3568000000002,
+  "implied_z_mod": 20.000000000000004,
+  "true_anomaly": true,
+  "expected_predicted_p1": true,
+  "expected_predicted_p2": false,
+  "kafka_topic": "telemetry.raw",
+  "kafka_partition": 0,
+  "kafka_offset": 33142
+}

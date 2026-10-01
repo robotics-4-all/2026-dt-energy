@@ -187,11 +187,15 @@ def _migrate_sqlite_alerts_schema(conn):
 
 
 def init_timescale_alerts(dsn, retries=10, delay_s=3):
-    """Δημιουργεί (αν δεν υπάρχει ήδη) το hypertable alerts στην ίδια
-    TimescaleDB όπου γράφει ο persistence_consumer, ώστε το Grafana να τα
-    βλέπει απευθείας μέσω του υπάρχοντος PostgreSQL data source. Με retry
-    logic, αφού η TimescaleDB μπορεί να μην έχει προλάβει να ξεκινήσει
-    ακόμα όταν εκκινεί το analytics-consumer container."""
+    """Δημιουργεί (αν δεν υπάρχει ήδη) το hypertable alerts, ΚΑΙ το hypertable
+    voltage_zscore_eval (καταγραφή του z-score σε κάθε αξιολόγηση τάσης, όχι
+    μόνο όταν σκάει alert — βλ. log_zscore_eval), στην ίδια TimescaleDB όπου
+    γράφει ο persistence_consumer, ώστε το Grafana να τα βλέπει απευθείας
+    μέσω του υπάρχοντος PostgreSQL data source. Με retry logic, αφού η
+    TimescaleDB μπορεί να μην έχει προλάβει να ξεκινήσει ακόμα όταν εκκινεί
+    το analytics-consumer container. Το CREATE TABLE IF NOT EXISTS εδώ είναι
+    ιδεμπότητο (defense-in-depth) — ο πίνακας κανονικά δημιουργείται ήδη από
+    το init_timescale.sql κατά την αρχικοποίηση της βάσης."""
     if not dsn:
         print("[analytics_consumer] TIMESCALE_DSN δεν έχει οριστεί — τα alerts δεν θα γραφτούν στην TimescaleDB.")
         return None
@@ -216,7 +220,22 @@ def init_timescale_alerts(dsn, retries=10, delay_s=3):
                 cur.execute("""
                     SELECT create_hypertable('digital_twin_alerts', 'timestamp', if_not_exists => TRUE)
                 """)
-            print("[analytics_consumer] TimescaleDB alerts hypertable έτοιμο.")
+                cur.execute("""
+                    CREATE TABLE IF NOT EXISTS voltage_zscore_eval (
+                        "timestamp" TIMESTAMPTZ NOT NULL,
+                        node_id TEXT NOT NULL,
+                        voltage DOUBLE PRECISION,
+                        median_v DOUBLE PRECISION,
+                        mad_v DOUBLE PRECISION,
+                        z_score DOUBLE PRECISION,
+                        predicted_p2 BOOLEAN,
+                        predicted_p1 BOOLEAN
+                    )
+                """)
+                cur.execute("""
+                    SELECT create_hypertable('voltage_zscore_eval', 'timestamp', if_not_exists => TRUE)
+                """)
+            print("[analytics_consumer] TimescaleDB alerts + voltage_zscore_eval hypertables έτοιμα.")
             return conn
         except Exception as exc:
             last_error = exc
@@ -297,6 +316,32 @@ class AnalyticsEngine:
                 )
         except Exception as exc:
             print(f"[analytics_consumer] αποτυχία εγγραφής alert στην TimescaleDB (αγνοείται): {exc}")
+
+    def log_zscore_eval(self, timestamp, node_id, voltage, median_v, mad_v, z_score, predicted_p2, predicted_p1):
+        """Καταγράφει το Modified Z-score σε ΚΑΘΕ αξιολόγηση τάσης (όχι μόνο
+        όταν ξεπερνά κάποιο threshold/σκάει alert), στο hypertable
+        voltage_zscore_eval. Στόχος: μια συνεχής, ζωντανή χρονοσειρά
+        z-score στο Grafana — ίδιας μορφής με το ανεξάρτητο OSBAD validation
+        experiment (ίδιος αλγόριθμος, ίδιο MAD factor, ίδια thresholds),
+        ώστε τα δύο να είναι άμεσα συγκρίσιμα πάνω σε κοινό y-άξονα (z-score).
+        Τα predicted_p2/predicted_p1 έχουν ΙΔΙΑ σημασιολογία με τις στήλες
+        "Predicted (p=2)"/"Predicted (p=1)" του OSBAD validation πίνακα —
+        θα σήκωνε alert ο ανιχνευτής σε αυτό το δείγμα, με persistence=2
+        (η προεπιλογή) ή persistence=1 (χωρίς απαίτηση συνέχειας) αντίστοιχα.
+        Aν δεν υπάρχει σύνδεση στην TimescaleDB, αποτυγχάνει σιωπηλά — δεν
+        διακόπτει ποτέ την ίδια την ανίχνευση ανωμαλιών."""
+        if self.timescale_conn is None:
+            return
+        try:
+            with self.timescale_conn.cursor() as cur:
+                cur.execute(
+                    """INSERT INTO voltage_zscore_eval
+                       ("timestamp", node_id, voltage, median_v, mad_v, z_score, predicted_p2, predicted_p1)
+                       VALUES (%s, %s, %s, %s, %s, %s, %s, %s)""",
+                    (timestamp, node_id, voltage, median_v, mad_v, z_score, predicted_p2, predicted_p1),
+                )
+        except Exception as exc:
+            print(f"[analytics_consumer] αποτυχία εγγραφής z-score στην TimescaleDB (αγνοείται): {exc}")
 
     # Πλάτη στηλών για το tabular console output (Function/Result table).
     _TABLE_COL_WIDTHS = {"severity": 8, "node": 16, "function": 18, "result": 24}
@@ -406,6 +451,13 @@ class AnalyticsEngine:
         # θετικά. Επιπλέον, απαιτούμε η απόκλιση να επιμείνει για
         # VOLTAGE_PERSISTENCE_SAMPLES συνεχόμενα δείγματα πριν καταγραφεί
         # alert, ώστε μεμονωμένες τυχαίες υπερβάσεις να μην πλημμυρίζουν το log.
+        #
+        # ΣΗΜΕΙΩΣΗ (log_zscore_eval): σε αντίθεση με το log_alert (που γράφεται
+        # ΜΟΝΟ όταν ξεπεραστεί threshold ΚΑΙ επιμείνει για PERSISTENCE_SAMPLES
+        # δείγματα), το log_zscore_eval γράφεται σε ΚΑΘΕ αξιολόγηση όπου
+        # υπολογίζεται πραγματικό z (δηλ. μόλις γεμίσει το ελάχιστο παράθυρο),
+        # ανεξαρτήτως αν τελικά σκάσει alert — ώστε η χρονοσειρά z-score στο
+        # Grafana να είναι συνεχής, όχι μόνο τα σποραδικά σημεία των alerts.
         voltage = payload.get('voltage')
         if voltage is not None and voltage > 0:
             window = self._voltage_window[node_id]
@@ -429,6 +481,18 @@ class AnalyticsEngine:
                     else:
                         self._voltage_critical_streak[node_id] = 0
                         self._voltage_warning_streak[node_id] = 0
+
+                    # predicted_p2/predicted_p1: ΙΔΙΑ λογική με το OSBAD
+                    # validation experiment — p2 = θα σήκωνε alert με το
+                    # τρέχον persistence=2 (VOLTAGE_PERSISTENCE_SAMPLES),
+                    # p1 = θα σήκωνε alert χωρίς απαίτηση συνέχειας (μόνο
+                    # z > CRITICAL σε αυτό ακριβώς το δείγμα). Υπολογίζεται
+                    # ΠΡΙΝ το _should_alert (cooldown), αφού το predicted flag
+                    # πρέπει να αντανακλά την κατάσταση του ανιχνευτή, όχι αν
+                    # καταγράφηκε ήδη πρόσφατο alert του ίδιου τύπου.
+                    predicted_p2 = self._voltage_critical_streak[node_id] >= VOLTAGE_PERSISTENCE_SAMPLES
+                    predicted_p1 = z > VOLTAGE_ZSCORE_CRITICAL
+                    self.log_zscore_eval(timestamp, node_id, voltage, median_v, mad_v, z, predicted_p2, predicted_p1)
 
                     if (self._voltage_critical_streak[node_id] >= VOLTAGE_PERSISTENCE_SAMPLES
                             and self._should_alert("CRITICAL_VOLTAGE_DEVIATION", node_id)):
