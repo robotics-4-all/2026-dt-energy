@@ -42,9 +42,10 @@ co2SpecificEmissions: 0.95
 end
 
 GlobalDistributions PTL_GRID_DEFAULTS
-wind_speed: WEIBULL(shape=2.0, scale=9.5)
+wind_speed: WEIBULL(shape=2.0, scale=10.8)
 solar_noise: NORMAL(mu=0.0, sigma=0.02)
-load_noise: NORMAL(mu=0.0, sigma=0.03)
+load_noise: NORMAL(mu=0.0, sigma=0.0102)
+voltage_noise: NORMAL(mu=0.0, sigma=0.0007)
 end
 
 ClassDistributions PTL_INDUSTRIAL_LOAD
@@ -70,7 +71,7 @@ currentOutputMW: 0.0
 windSpeed: 8.6
 turbineCount: 18
 distributions {
-    wind_speed: WEIBULL(shape=1.7, scale=10.2)
+    wind_speed: WEIBULL(shape=1.7, scale=10.8)
 }
 end
 
