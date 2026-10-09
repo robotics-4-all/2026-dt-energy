@@ -12,6 +12,82 @@
   "refresh": "5s",
   "time": {"from": "now-15m", "to": "now"},
   "panels": [
+    {"id": {{ ns.panel_id }}, "type": "row", "title": "Τοπολογία και κατάσταση κόμβων (live) — κόκκινο = alert ανίχνευσης στην τάση", "collapsed": false, "gridPos": {"h": 1, "w": 24, "x": 0, "y": {{ ns.y }}}, "panels": []}
+    {%- set ns.panel_id = ns.panel_id + 1 -%}
+    {%- set ns.y = ns.y + 1 %}
+    ,
+    {
+      "id": {{ ns.panel_id }},
+      "type": "nodeGraph",
+      "title": "Τοπολογία δικτύου — ο κόμβος γίνεται κόκκινος όταν ο ανιχνευτής σηκώσει alert (τελευταία 60 s)",
+      "description": "Πράσινο = OK, κίτρινο = προειδοποίηση (p1: ένα δείγμα πάνω από το όριο), κόκκινο = ALERT (p2: δύο συνεχόμενα δείγματα). Βάσει του πίνακα voltage_zscore_eval.",
+      "datasource": {"type": "postgres", "uid": "timescaledb-dt"},
+      "gridPos": {"h": 10, "w": 16, "x": 0, "y": {{ ns.y }}},
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": [
+          {"matcher": {"id": "byName", "options": "arc__ok"},    "properties": [{"id": "color", "value": {"mode": "fixed", "fixedColor": "green"}}]},
+          {"matcher": {"id": "byName", "options": "arc__warn"},  "properties": [{"id": "color", "value": {"mode": "fixed", "fixedColor": "yellow"}}]},
+          {"matcher": {"id": "byName", "options": "arc__alert"}, "properties": [{"id": "color", "value": {"mode": "fixed", "fixedColor": "red"}}]}
+        ]
+      },
+      "options": {"nodes": {"mainStatUnit": "none", "secondaryStatUnit": "none"}, "edges": {}},
+      "targets": [
+        {
+          "refId": "nodes",
+          "editorMode": "code",
+          "rawQuery": true,
+          "format": "table",
+          "rawSql": "WITH nodes(id, ntype) AS (VALUES {% for n in node_summaries %}('{{ n.id | replace("'", "''") | jsonesc }}', '{{ n.type }}'){% if not loop.last %}, {% endif %}{% endfor %}), recent AS (SELECT node_id, bool_or(predicted_p2) AS p2, bool_or(predicted_p1) AS p1, max(z_score) AS zmax FROM voltage_zscore_eval WHERE \"timestamp\" > now() - interval '60 seconds' GROUP BY node_id) SELECT n.id AS id, n.id AS title, n.ntype AS \"subTitle\", ROUND(COALESCE(r.zmax, 0)::numeric, 1) AS \"mainStat\", CASE WHEN r.p2 THEN 'ALERT' WHEN r.p1 THEN 'WARN' ELSE 'OK' END AS \"detail__status\", (CASE WHEN r.p2 THEN 1 ELSE 0 END)::float AS arc__alert, (CASE WHEN r.p2 THEN 0 WHEN r.p1 THEN 1 ELSE 0 END)::float AS arc__warn, (CASE WHEN r.p2 OR r.p1 THEN 0 ELSE 1 END)::float AS arc__ok FROM nodes n LEFT JOIN recent r ON r.node_id = n.id"
+        },
+        {
+          "refId": "edges",
+          "editorMode": "code",
+          "rawQuery": true,
+          "format": "table",
+          "rawSql": "SELECT id, source, target FROM (VALUES {% for l in all_lines %}('{{ l.id | replace("'", "''") | jsonesc }}', '{{ l.source | replace("'", "''") | jsonesc }}', '{{ l.target | replace("'", "''") | jsonesc }}'){% if not loop.last %}, {% endif %}{% endfor %}) AS e(id, source, target)"
+        }
+      ]
+    }
+    {%- set ns.panel_id = ns.panel_id + 1 %}
+    ,
+    {
+      "id": {{ ns.panel_id }},
+      "type": "stat",
+      "title": "Κατάσταση ανά κόμβο (τελευταία 60 s)",
+      "description": "Ένα πλακίδιο ανά κόμβο: OK / WARN (p1) / ALERT (p2).",
+      "datasource": {"type": "postgres", "uid": "timescaledb-dt"},
+      "gridPos": {"h": 10, "w": 8, "x": 16, "y": {{ ns.y }}},
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "mappings": [{"type": "value", "options": {
+            "0": {"text": "OK", "color": "green"},
+            "1": {"text": "WARN", "color": "yellow"},
+            "2": {"text": "ALERT", "color": "red"}}}],
+          "thresholds": {"mode": "absolute", "steps": [
+            {"color": "green", "value": null}, {"color": "yellow", "value": 1}, {"color": "red", "value": 2}]}
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {"values": true, "calcs": ["lastNotNull"], "fields": "/^status_code$/"},
+        "colorMode": "background", "graphMode": "none", "textMode": "value_and_name",
+        "orientation": "auto", "justifyMode": "center"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "editorMode": "code",
+          "rawQuery": true,
+          "format": "table",
+          "rawSql": "WITH nodes(id) AS (VALUES {% for n in node_summaries %}('{{ n.id | replace("'", "''") | jsonesc }}'){% if not loop.last %}, {% endif %}{% endfor %}), recent AS (SELECT node_id, bool_or(predicted_p2) AS p2, bool_or(predicted_p1) AS p1 FROM voltage_zscore_eval WHERE \"timestamp\" > now() - interval '60 seconds' GROUP BY node_id) SELECT n.id AS node, CASE WHEN r.p2 THEN 2 WHEN r.p1 THEN 1 ELSE 0 END AS status_code FROM nodes n LEFT JOIN recent r ON r.node_id = n.id ORDER BY n.id"
+        }
+      ]
+    }
+    {%- set ns.panel_id = ns.panel_id + 1 -%}
+    {%- set ns.y = ns.y + 10 %}
+    ,
     {"id": {{ ns.panel_id }}, "type": "row", "title": "Δίκτυο — {{ grid_name | jsonesc }} (network-wide)", "collapsed": false, "gridPos": {"h": 1, "w": 24, "x": 0, "y": {{ ns.y }}}, "panels": []}
     {%- set ns.panel_id = ns.panel_id + 1 -%}
     {%- set ns.y = ns.y + 1 %}

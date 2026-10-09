@@ -115,6 +115,9 @@ services:
     environment:
       MQTT_HOST: mosquitto
       MQTT_PORT: "1883"
+      # Εξομάλυνση καιρού (νεφοκάλυψη/άνεμος). 0.12 = κανονική λειτουργία· 1.0 = χωρίς εξομάλυνση (για πειράματα).
+      # Αλλαγή χωρίς επεξεργασία του αρχείου:  $env:WEATHER_SMOOTHING_ALPHA="1.0"  πριν το docker compose up
+      WEATHER_SMOOTHING_ALPHA: "${WEATHER_SMOOTHING_ALPHA:-0.12}"
       CONTROL_MODE: observe  # "observe" = καμία διορθωτική ενέργεια· οι ανωμαλίες παραμένουν
                               # ορατές για ανίχνευση. Άλλαξέ το σε "active" για κανονικό έλεγχο.
     command: ["python", "-u", "edge_simulator.py"]

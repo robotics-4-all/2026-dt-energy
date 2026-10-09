@@ -1,0 +1,99 @@
+[
+  {
+    "variable": "load_noise",
+    "mode": "relative",
+    "detrend": "rolling_median",
+    "n_input": 629,
+    "alpha": 0.05,
+    "holdout": 0.3,
+    "sweep": [
+      {
+        "window": 2,
+        "clipped": 0,
+        "white_noise_ratio": 1.139344583328015,
+        "n_train": 438,
+        "n_holdout": 187,
+        "candidates": [
+          {
+            "family": "NORMAL",
+            "params": {
+              "mu": -9.106020555760577e-05,
+              "sigma": 0.0096842465534516
+            },
+            "aic": -2815.2450325020573,
+            "ks_D": 0.025020730311238526,
+            "ks_p": 0.9403153935903383,
+            "n_train": 438,
+            "n_test": 438,
+            "rho1": 0.0,
+            "passes": true
+          }
+        ]
+      },
+      {
+        "window": 4,
+        "clipped": 0,
+        "white_noise_ratio": 1.0814907433000818,
+        "n_train": 440,
+        "n_holdout": 189,
+        "candidates": [
+          {
+            "family": "NORMAL",
+            "params": {
+              "mu": 0.0002453911200266034,
+              "sigma": 0.011021279069419406
+            },
+            "aic": -2714.3102150887544,
+            "ks_D": 0.03785622510847919,
+            "ks_p": 0.5410810033188758,
+            "n_train": 440,
+            "n_test": 440,
+            "rho1": 0.06724605379583573,
+            "passes": true
+          }
+        ]
+      },
+      {
+        "window": 8,
+        "clipped": 0,
+        "white_noise_ratio": 1.0438020840328477,
+        "n_train": 440,
+        "n_holdout": 189,
+        "candidates": [
+          {
+            "family": "NORMAL",
+            "params": {
+              "mu": 0.001550868947885669,
+              "sigma": 0.019301509107933816
+            },
+            "aic": -2221.197445506241,
+            "ks_D": 0.11813184724861314,
+            "ks_p": 0.15821046735235272,
+            "n_train": 440,
+            "n_test": 88,
+            "rho1": 0.66361058561377,
+            "passes": true
+          }
+        ]
+      }
+    ],
+    "status": "ACCEPTED",
+    "window": 2,
+    "family": "NORMAL",
+    "params": {
+      "mu": -9.106020555760577e-05,
+      "sigma": 0.008499839903713769
+    },
+    "ks_train_p": 0.9403153935903383,
+    "ks_train_D": 0.025020730311238526,
+    "ks_holdout_p": 0.21020160998046444,
+    "ks_holdout_D": 0.07670078132909552,
+    "n_train": 438,
+    "n_holdout": 187,
+    "n_holdout_effective": 187,
+    "rho1_holdout": 0.0,
+    "clipped": 0,
+    "white_noise_ratio": 1.139344583328015,
+    "bias_corrected": true
+  }
+]

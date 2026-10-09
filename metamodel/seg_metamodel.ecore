@@ -1,0 +1,155 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<ecore:EPackage xmlns:xmi="http://www.omg.org/XMI" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="smartgrid" nsURI="http://generic.smartgrid/core" nsPrefix="sg" xmi:version="2.0">
+  <eClassifiers xsi:type="ecore:EEnum" name="OperationalStatus">
+    <eLiterals xsi:type="ecore:EEnumLiteral" name="ACTIVE"/>
+    <eLiterals xsi:type="ecore:EEnumLiteral" name="INACTIVE" value="1"/>
+    <eLiterals xsi:type="ecore:EEnumLiteral" name="MAINTENANCE" value="2"/>
+    <eLiterals xsi:type="ecore:EEnumLiteral" name="FAULT" value="3"/>
+    <eLiterals xsi:type="ecore:EEnumLiteral" name="STANDBY" value="4"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EEnum" name="DistributionVariable">
+    <eLiterals xsi:type="ecore:EEnumLiteral" name="wind_speed"/>
+    <eLiterals xsi:type="ecore:EEnumLiteral" name="solar_noise" value="1"/>
+    <eLiterals xsi:type="ecore:EEnumLiteral" name="load_noise" value="2"/>
+    <eLiterals xsi:type="ecore:EEnumLiteral" name="voltage_noise" value="3"/>
+    <eLiterals xsi:type="ecore:EEnumLiteral" name="frequency_noise" value="4"/>
+    <eLiterals xsi:type="ecore:EEnumLiteral" name="soc_noise" value="5"/>
+    <eLiterals xsi:type="ecore:EEnumLiteral" name="congestion_noise" value="6"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EEnum" name="NodeClassName">
+    <eLiterals xsi:type="ecore:EEnumLiteral" name="ThermalPlant"/>
+    <eLiterals xsi:type="ecore:EEnumLiteral" name="SolarPark" value="1"/>
+    <eLiterals xsi:type="ecore:EEnumLiteral" name="WindFarm" value="2"/>
+    <eLiterals xsi:type="ecore:EEnumLiteral" name="Residential" value="3"/>
+    <eLiterals xsi:type="ecore:EEnumLiteral" name="Industrial" value="4"/>
+    <eLiterals xsi:type="ecore:EEnumLiteral" name="SubStation" value="5"/>
+    <eLiterals xsi:type="ecore:EEnumLiteral" name="BatteryStorage" value="6"/>
+    <eLiterals xsi:type="ecore:EEnumLiteral" name="Transformer" value="7"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="SpatialData">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="locationName" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="latitude" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="longitude" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="Distribution" abstract="true"/>
+  <eClassifiers xsi:type="ecore:EClass" eSuperTypes="#//Distribution" name="WeibullDist">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="shape" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="scale" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" eSuperTypes="#//Distribution" name="NormalDist">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="mu" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="sigma" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" eSuperTypes="#//Distribution" name="BetaDist">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="alpha" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="beta" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" eSuperTypes="#//Distribution" name="LogNormalDist">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="mu" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="sigma" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" eSuperTypes="#//Distribution" name="GammaDist">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="shape" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="scale" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" eSuperTypes="#//Distribution" name="PoissonDist">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="lam" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="DistributionEntry">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="variable" eType="#//DistributionVariable" lowerBound="1"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="distribution" eType="#//Distribution" lowerBound="1" containment="true"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="GlobalDistributions">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="symbol" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="distributions" eType="#//DistributionEntry" upperBound="-1" containment="true"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="ClassDistributions">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="symbol" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="appliesTo" eType="#//NodeClassName" lowerBound="1"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="distributions" eType="#//DistributionEntry" upperBound="-1" containment="true"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="GridElement" abstract="true">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="symbol" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="id" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="name" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="voltageLevel" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="status" eType="#//OperationalStatus"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="spatialData" eType="#//SpatialData" containment="true"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="lines" eType="#//PowerLine" upperBound="-1" containment="true"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="distributions" eType="#//DistributionEntry" upperBound="-1" containment="true"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" eSuperTypes="#//GridElement" name="EnergyNode" abstract="true">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="measuredVoltage" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="measuredCurrent" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="powerFactor" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="frequency" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="activePower" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="reactivePower" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="lastUpdate" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="locationRef" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="isControllable" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" eSuperTypes="#//EnergyNode" name="Producer" abstract="true">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="maxCapacityMW" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="currentOutputMW" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" eSuperTypes="#//Producer" name="ThermalPlant">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="fuelType" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="efficiency" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="thermalOutputMW" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="co2SpecificEmissions" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" eSuperTypes="#//Producer" name="SolarPark">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="panelType" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="cloudCover" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" eSuperTypes="#//Producer" name="WindFarm">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="windSpeed" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="turbineCount" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EInt"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" eSuperTypes="#//EnergyNode" name="Consumer" abstract="true">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="demandMW" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="currentConsumption" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="dailyProfile" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" eSuperTypes="#//Consumer" name="Residential">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="numberOfResidents" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EInt"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="hasSmartAppliances" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" eSuperTypes="#//Consumer" name="Industrial">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="industryType" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" eSuperTypes="#//GridElement" name="SubStation">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="congestionLevel" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="connectedTo" eType="#//SubStation" upperBound="-1"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" eSuperTypes="#//GridElement" name="BatteryStorage">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="capacityMWh" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="stateOfCharge" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" eSuperTypes="#//GridElement" name="Transformer">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="ratingKVA" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="efficiency" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="primaryVoltage" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="secondaryVoltage" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="PowerLine">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="symbol" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="id" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="lengthKM" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="maxCapacityMW" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="source" eType="#//GridElement" lowerBound="1"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="target" eType="#//GridElement" lowerBound="1"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="PowerGrid">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="symbol" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="gridName" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="region" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="SmartEnergyGridModel">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="grids" eType="#//PowerGrid" upperBound="-1" containment="true"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="elements" eType="#//GridElement" upperBound="-1" containment="true"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="globalDistributions" eType="#//GlobalDistributions" upperBound="-1" containment="true"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="classDistributions" eType="#//ClassDistributions" upperBound="-1" containment="true"/>
+  </eClassifiers>
+</ecore:EPackage>

@@ -1,0 +1,76 @@
+[
+  {
+    "variable": "solar_noise",
+    "mode": "additive",
+    "detrend": "rolling_median",
+    "n_input": 341,
+    "alpha": 0.05,
+    "holdout": 0.3,
+    "sweep": [
+      {
+        "window": 2,
+        "clipped": 0,
+        "white_noise_ratio": 1.139344583328015,
+        "n_train": 154,
+        "n_holdout": 63,
+        "candidates": [
+          {
+            "family": "NORMAL",
+            "params": {
+              "mu": -0.006077657202391074,
+              "sigma": 0.04932402306104958
+            },
+            "aic": -485.84489406995544,
+            "ks_D": 0.13279342001365502,
+            "ks_p": 0.007901690487743421,
+            "n_train": 154,
+            "n_test": 154,
+            "rho1": 0.0,
+            "passes": false
+          }
+        ]
+      },
+      {
+        "window": 3,
+        "clipped": 0,
+        "white_noise_ratio": 1.101389881030624,
+        "n_train": 198,
+        "n_holdout": 81,
+        "candidates": [
+          {
+            "family": "NORMAL",
+            "params": {
+              "mu": 0.0031785961451928544,
+              "sigma": 0.061837558067318214
+            },
+            "aic": -536.2651087565312,
+            "ks_D": 0.08950268255266558,
+            "ks_p": 0.07878470640166713,
+            "n_train": 198,
+            "n_test": 198,
+            "rho1": 0.14655483255734517,
+            "passes": true
+          }
+        ]
+      }
+    ],
+    "status": "ACCEPTED",
+    "window": 3,
+    "family": "NORMAL",
+    "params": {
+      "mu": 0.0031785961451928544,
+      "sigma": 0.05614502106143722
+    },
+    "ks_train_p": 0.07878470640166713,
+    "ks_train_D": 0.08950268255266558,
+    "ks_holdout_p": 0.19977907653743043,
+    "ks_holdout_D": 0.16350110454614641,
+    "n_train": 198,
+    "n_holdout": 81,
+    "n_holdout_effective": 41,
+    "rho1_holdout": 0.33903602580482073,
+    "clipped": 0,
+    "white_noise_ratio": 1.101389881030624,
+    "bias_corrected": true
+  }
+]

@@ -1,0 +1,32 @@
+# Mapping: ENTSO-E Actual Total Load (Greece)  ->  Industrial (aggregate load) node
+description: "ENTSO-E Transparency Platform, Actual Total Load, bidding zone GR (10YGR-HTSO-----Y), PT15M"
+
+source:
+  loader: entsoe_xml
+  path: ../../data/entsoe_actual_total_load_GR_2026-09-25_to_10-01.xml
+  series_filter: {businessType: A04}      # A04 = Actual Total Load
+
+grid:
+  symbol: GR_LOAD_GRID
+  name: "Greek system load"
+  region: "Greece (bidding zone GR)"
+
+node:
+  class: Industrial
+  id: "LOAD-GR-SYSTEM"
+  name: "Greek aggregate system load"
+  symbol: GR_SYSTEM_LOAD
+  attrs:
+    voltageLevel: 400.0                     # literal: transmission level
+    demandMW:           {column: value, stat: median}
+    currentConsumption: {column: value, stat: median}
+    activePower:        {column: value, stat: median}
+    industryType: "Aggregate system load"
+    # typical daily shape: hourly median (local time) / overall median -> 24 factors for the simulator
+    dailyProfile: {profile: hour_of_day, column: value, time_column: timestamp, timezone: Europe/Athens}
+
+variables:
+  load_noise:
+    column: value
+    time_column: timestamp
+    detrend: {method: rolling_median, windows: [2, 4, 8]}

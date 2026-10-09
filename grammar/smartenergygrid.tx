@@ -21,7 +21,8 @@ SmartEnergyGridModel:
     )#
 ;
 
-// Custom κανόνας για αναγνώριση πεζών true/false σε Python boolean
+// Ταιριάζει ΜΟΝΟ το κείμενο true/false. Η μετατροπή σε Python bool γίνεται στο seg2xmi.load_textx_metamodel
+// (object processor)· χωρίς αυτήν το textX δίνει το string 'false', και το bool('false') είναι True.
 boolean:
     'true' | 'false'
 ;
@@ -266,6 +267,7 @@ Residential:
         ('demandMW:' demandMW=FLOAT)
         ('currentConsumption:' currentConsumption=FLOAT)
         ('numberOfResidents:' numberOfResidents=INT)
+        ('dailyProfile:' dailyProfile=STRING)?
         ('hasSmartAppliances:' hasSmartAppliances=boolean)
         ('lines' '{' lines*=PowerLine '}')?
         ('distributions' '{' distributions*=DistributionEntry '}')?
@@ -293,6 +295,7 @@ Industrial:
         ('demandMW:' demandMW=FLOAT)
         ('currentConsumption:' currentConsumption=FLOAT)
         ('industryType:' industryType=STRING)
+        ('dailyProfile:' dailyProfile=STRING)?
         ('lines' '{' lines*=PowerLine '}')?
         ('distributions' '{' distributions*=DistributionEntry '}')?
     )#

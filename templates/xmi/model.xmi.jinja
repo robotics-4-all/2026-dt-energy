@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+{#- M2T template: textX model (already flattened into `ctx`) -> XMI instance of seg_metamodel.ecore -#}
+{%- macro entry(d, tag, indent) %}
+{{ indent }}<{{ tag }} variable="{{ d.variable }}">
+{{ indent }}  <distribution xsi:type="sg:{{ d.cls }}"{{ d.attrs | xmlattrs }}/>
+{{ indent }}</{{ tag }}>
+{%- endmacro %}
+<sg:SmartEnergyGridModel xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:sg="{{ ns_uri }}">
+{%- for g in grids %}
+  <grids{{ g.attrs | xmlattrs }}/>
+{%- endfor %}
+{%- for e in elements %}
+  <elements xsi:type="sg:{{ e.cls }}"{{ e.attrs | xmlattrs }}{% if e.connected %} connectedTo="{{ e.connected }}"{% endif %}{% if e.spatial or e.lines or e.distributions %}>{% else %}/>{% endif %}
+{%- if e.spatial %}
+    <spatialData{{ e.spatial | xmlattrs }}/>
+{%- endif %}
+{%- for l in e.lines %}
+    <lines{{ l.attrs | xmlattrs }} source="{{ l.source }}" target="{{ l.target }}"/>
+{%- endfor %}
+{%- for d in e.distributions %}{{ entry(d, 'distributions', '    ') }}{% endfor %}
+{%- if e.spatial or e.lines or e.distributions %}
+  </elements>
+{%- endif %}
+{%- endfor %}
+{%- for b in global_distributions %}
+  <globalDistributions{{ b.attrs | xmlattrs }}>
+{%- for d in b.distributions %}{{ entry(d, 'distributions', '    ') }}{% endfor %}
+  </globalDistributions>
+{%- endfor %}
+{%- for b in class_distributions %}
+  <classDistributions{{ b.attrs | xmlattrs }}>
+{%- for d in b.distributions %}{{ entry(d, 'distributions', '    ') }}{% endfor %}
+  </classDistributions>
+{%- endfor %}
+</sg:SmartEnergyGridModel>

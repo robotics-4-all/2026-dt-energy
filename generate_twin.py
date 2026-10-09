@@ -9,8 +9,9 @@ import sys
 from pprint import pformat
  
 from jinja2 import Environment, FileSystemLoader
-from textx import metamodel_from_file
 from textx.exceptions import TextXError
+
+import seg2xmi
  
 logger = logging.getLogger("generate_twin")
  
@@ -59,9 +60,6 @@ DISTRIBUTION_TYPE_ORDER = ['WEIBULL', 'NORMAL', 'BETA', 'LOGNORMAL', 'GAMMA', 'P
 
 
 def build_dashboard_context(node_distributions):
-    """Ομαδοποιεί τα (node, variable) ζευγάρια ανά τύπο κατανομής για το
-    Grafana dashboard template, διαχωρίζοντας τις ενεργές μεταβλητές
-    (αυτές που πράγματι επηρεάζουν τηλεμετρία) από τις μη-εφαρμοσμένες."""
     panels_by_type = {dtype: [] for dtype in DISTRIBUTION_TYPE_ORDER}
     inactive_entries = []
     for node_id, dists in node_distributions.items():
@@ -185,10 +183,24 @@ def build_node_summaries(all_nodes, node_class):
             'power_factor': getattr(node, 'powerFactor', 0.9),
             'voltage_level': getattr(node, 'voltageLevel', 20.0),
             'has_smart_appliances': bool(getattr(node, 'hasSmartAppliances', False)),
+            # mean cloud fraction of a SolarPark, taken from the .seg (None for other classes)
+            'cloud_mean': (getattr(node, 'cloudCover', None) if node_class[node_id] == 'SolarPark' else None),
+            # 24 hourly load factors (Residential/Industrial) from the .seg, or None
+            'daily_profile': _parse_profile(getattr(node, 'dailyProfile', None)),
         })
     return summaries
  
  
+def _parse_profile(text):
+    """'0.71,0.68,...' (24 numbers) -> list of floats, or None when the .seg gives no profile."""
+    if not text:
+        return None
+    vals = [float(x) for x in text.split(',')]
+    if len(vals) != 24:
+        raise ValueError(f'dailyProfile needs 24 values, got {len(vals)}')
+    return vals
+
+
 def build_all_lines(all_nodes):
     lines = []
     seen = set()
@@ -241,43 +253,38 @@ TEMPLATE_FILES = {
  
  
 def log_distribution_report(node_distributions, level=logging.INFO):
-    """Καταγράφει (δεν τυπώνει άμεσα) το επίπεδο προέλευσης κάθε κατανομής
-    ανά στοιχείο. Χρησιμοποιεί logging ώστε να ελέγχεται η ορατότητά του
-    (verbosity) χωρίς να πλημμυρίζει πάντα το stdout."""
     logger.log(level, "Επίπεδο προέλευσης κατανομών ανά στοιχείο:")
     for node_id, dists in node_distributions.items():
         overrides = ", ".join(f"{var}={cfg['source']}" for var, cfg in dists.items())
         logger.log(level, "  %s: %s", node_id, overrides)
  
  
-def load_model(model_path, grammar_path):
-    """Φορτώνει το grammar και το μοντέλο, με σαφή μηνύματα σφάλματος
-    αντί για ωμό traceback αν κάτι δεν υπάρχει ή είναι λάθος διαμορφωμένο."""
-    if not os.path.isfile(grammar_path):
-        raise FileNotFoundError(f"Δεν βρέθηκε το αρχείο γραμματικής: {grammar_path}")
+def load_model(model_path, grammar_path, templates_dir='templates', xmi_out=None):
+    """Front half of the pipeline:  .seg --textX--> Jinja --> .xmi --pyecore + constraints--> model view.
+    The .seg is the single source of truth; the XMI is derived from it and acts as a validation gate."""
     if not os.path.isfile(model_path):
         raise FileNotFoundError(f"Δεν βρέθηκε το αρχείο μοντέλου: {model_path}")
- 
+    if not os.path.isfile(grammar_path):
+        raise FileNotFoundError(f"Δεν βρέθηκε το αρχείο γραμματικής: {grammar_path}")
     try:
-        tx_metamodel = metamodel_from_file(grammar_path)
-    except TextXError as e:
-        raise RuntimeError(f"Σφάλμα στη γραμματική '{grammar_path}': {e}") from e
- 
-    try:
-        model_root = tx_metamodel.model_from_file(model_path)
+        xmi_path, violations = seg2xmi.seg_to_xmi(model_path, xmi_out, grammar_path, templates_dir)
     except TextXError as e:
         raise RuntimeError(f"Σφάλμα ανάλυσης μοντέλου '{model_path}': {e}") from e
- 
-    return model_root
- 
- 
+    logger.info("XMI παράχθηκε και φορτώθηκε στο Ecore: %s", xmi_path)
+    if violations:
+        lines = "\n".join(f"  [{cid}] {where}: {msg}" for cid, where, msg in violations)
+        raise RuntimeError(f"Το μοντέλο παραβιάζει {len(violations)} περιορισμούς:\n{lines}")
+    return seg2xmi.xmi_to_view(seg2xmi.load_xmi(xmi_path))
+
+
 def generate_digital_twin(model_path, templates_dir='templates', grammar_path=None, verbose=False):
     base_name = os.path.splitext(os.path.basename(model_path))[0]
  
     if grammar_path is None:
         grammar_path = os.path.join('grammar', 'smartenergygrid.tx')
  
-    model_root = load_model(model_path, grammar_path)
+    xmi_out = os.path.join(f"{base_name}_twin", 'model', f"{base_name}.xmi")
+    model_root = load_model(model_path, grammar_path, templates_dir=templates_dir, xmi_out=xmi_out)
  
     resolver = DistributionResolver(model_root)
     all_nodes = collect_all_nodes(model_root)

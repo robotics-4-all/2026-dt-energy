@@ -23,8 +23,7 @@ CREATE INDEX IF NOT EXISTS idx_telemetry_node_id
 
 -- Καταγραφή του Modified Z-score σε ΚΑΘΕ αξιολόγηση τάσης από τον
 -- analytics_consumer.py (όχι μόνο όταν σκάει alert) — ώστε να υπάρχει μια
--- συνεχής, ζωντανή χρονοσειρά z-score στο Grafana, άμεσα συγκρίσιμη με το
--- ανεξάρτητο OSBAD validation experiment (ίδιος αλγόριθμος, ίδια thresholds).
+-- συνεχής, ζωντανή χρονοσειρά z-score στο Grafana.
 -- Δημιουργείται εδώ (όχι μόνο στον analytics_consumer) ώστε το hypertable να
 -- υπάρχει σίγουρα πριν ξεκινήσει να γράφει ο consumer.
 CREATE TABLE IF NOT EXISTS voltage_zscore_eval (
@@ -36,9 +35,7 @@ CREATE TABLE IF NOT EXISTS voltage_zscore_eval (
     z_score       DOUBLE PRECISION,
     -- predicted_p2/predicted_p1: αν ο ανιχνευτής θα σήκωνε alert σε αυτό το
     -- δείγμα, με persistence=2 (η προεπιλογή του συστήματος) και persistence=1
-    -- (χωρίς απαίτηση συνέχειας) αντίστοιχα — ίδιας σημασιολογίας με τις
-    -- στήλες "Predicted (p=2)"/"Predicted (p=1)" του OSBAD validation
-    -- πίνακα, ώστε οι δύο πίνακες να είναι απευθείας συγκρίσιμοι.
+    -- (χωρίς απαίτηση συνέχειας) αντίστοιχα.
     predicted_p2  BOOLEAN,
     predicted_p1  BOOLEAN
 );

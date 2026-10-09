@@ -321,11 +321,9 @@ class AnalyticsEngine:
         """Καταγράφει το Modified Z-score σε ΚΑΘΕ αξιολόγηση τάσης (όχι μόνο
         όταν ξεπερνά κάποιο threshold/σκάει alert), στο hypertable
         voltage_zscore_eval. Στόχος: μια συνεχής, ζωντανή χρονοσειρά
-        z-score στο Grafana — ίδιας μορφής με το ανεξάρτητο OSBAD validation
-        experiment (ίδιος αλγόριθμος, ίδιο MAD factor, ίδια thresholds),
-        ώστε τα δύο να είναι άμεσα συγκρίσιμα πάνω σε κοινό y-άξονα (z-score).
-        Τα predicted_p2/predicted_p1 έχουν ΙΔΙΑ σημασιολογία με τις στήλες
-        "Predicted (p=2)"/"Predicted (p=1)" του OSBAD validation πίνακα —
+        z-score στο Grafana (Modified Z-score, MAD factor 1.4826,
+        thresholds WARNING 2.0 / CRITICAL 3.5).
+        Τα predicted_p2/predicted_p1 δείχνουν αν
         θα σήκωνε alert ο ανιχνευτής σε αυτό το δείγμα, με persistence=2
         (η προεπιλογή) ή persistence=1 (χωρίς απαίτηση συνέχειας) αντίστοιχα.
         Aν δεν υπάρχει σύνδεση στην TimescaleDB, αποτυγχάνει σιωπηλά — δεν
@@ -482,8 +480,8 @@ class AnalyticsEngine:
                         self._voltage_critical_streak[node_id] = 0
                         self._voltage_warning_streak[node_id] = 0
 
-                    # predicted_p2/predicted_p1: ΙΔΙΑ λογική με το OSBAD
-                    # validation experiment — p2 = θα σήκωνε alert με το
+                    # predicted_p2/predicted_p1:
+                    # p2 = θα σήκωνε alert με το
                     # τρέχον persistence=2 (VOLTAGE_PERSISTENCE_SAMPLES),
                     # p1 = θα σήκωνε alert χωρίς απαίτηση συνέχειας (μόνο
                     # z > CRITICAL σε αυτό ακριβώς το δείγμα). Υπολογίζεται

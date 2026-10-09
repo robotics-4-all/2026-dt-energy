@@ -1,0 +1,32 @@
+# Mapping: NASA POWER hourly irradiance  ->  SolarPark node
+description: "NASA POWER ALLSKY_SFC_SW_DWN, Kozani (40.26N, 21.28E), hourly, Sept 2023"
+
+source:
+  loader: nasa_power_csv
+  path: ../../data/nasa_power_hourly_kozani_2023-09.csv
+
+grid:
+  symbol: KOZANI_SOLAR_GRID
+  name: "Kozani solar grid"
+  region: "Western Macedonia"
+
+node:
+  class: SolarPark
+  id: "SOLAR-KOZANI-NASA"
+  name: "Kozani solar park (NASA POWER)"
+  symbol: KOZANI_SOLAR
+  attrs:
+    voltageLevel: 20.0                      # literal
+    maxCapacityMW: 50.0                     # literal (nameplate is not in the dataset)
+    # mean cloud fraction over daylight hours, from the irradiance series
+    cloudCover: {column: ALLSKY_SFC_SW_DWN, stat: mean, time_column: timestamp,
+                 transform: {name: cloud_fraction_from_irradiance, min_reference: 100}}
+
+variables:
+  solar_noise:
+    # additive noise on the cloud FRACTION (see VARIABLE_SEMANTICS in the script)
+    column: ALLSKY_SFC_SW_DWN
+    time_column: timestamp
+    transform: {name: cloud_fraction_from_irradiance, min_reference: 100}
+    group_by: "@date"                       # detrend within each day
+    detrend: {method: rolling_median, windows: [2, 3]}

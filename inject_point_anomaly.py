@@ -63,7 +63,7 @@ KAFKA_BOOTSTRAP_SERVERS = os.environ.get("KAFKA_BOOTSTRAP_SERVERS", "localhost:9
 # docker-compose.yml / analytics_consumer.py του δικού σας project
 # (η μεταβλητή jinja ήταν "{{ kafka_topic_raw }}" - το default εδώ είναι
 # απλή εικασία σύμβασης ονοματοδοσίας, ΟΧΙ επιβεβαιωμένη τιμή):
-KAFKA_TOPIC_RAW = os.environ.get("KAFKA_TOPIC_RAW", "grid.telemetry.raw")
+KAFKA_TOPIC_RAW = os.environ.get("KAFKA_TOPIC_RAW", "telemetry.raw")
 TIMESCALE_DSN = os.environ.get(
     "TIMESCALE_DSN",
     "host=localhost port=5432 dbname=smartgrid_dt user=dt_user password=dt_password",
@@ -132,6 +132,7 @@ def pick_node_and_baseline(conn, forced_node_id=None):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--node-id", default=None, help="Συγκεκριμένο node_id (αλλιώς: το πιο πρόσφατα ενεργό)")
+    parser.add_argument("--count", type=int, default=1, help="Πόσα συνεχόμενα δείγματα να σταλούν (>=2 για να ανάψει και το p2/alert)")
     parser.add_argument("--dry-run", action="store_true", help="Υπολογισμός/εκτύπωση χωρίς αποστολή στο Kafka")
     args = parser.parse_args()
 
@@ -178,9 +179,12 @@ def main():
         bootstrap_servers=KAFKA_BOOTSTRAP_SERVERS,
         value_serializer=lambda v: json.dumps(v).encode("utf-8"),
     )
-    future = producer.send(KAFKA_TOPIC_RAW, payload)
+    futures = []
+    for _ in range(max(1, args.count)):
+        payload["timestamp"] = datetime.now(timezone.utc).isoformat()
+        futures.append(producer.send(KAFKA_TOPIC_RAW, dict(payload)))
     producer.flush(timeout=10)
-    record_metadata = future.get(timeout=10)
+    record_metadata = futures[-1].get(timeout=10)
     print(
         f"Στάλθηκε: topic={record_metadata.topic} "
         f"partition={record_metadata.partition} offset={record_metadata.offset}"
@@ -200,7 +204,8 @@ def main():
         "implied_z_mod": implied_z,
         "true_anomaly": True,
         "expected_predicted_p1": True,
-        "expected_predicted_p2": False,
+        "expected_predicted_p2": args.count >= 2,
+        "count": args.count,
         "kafka_topic": KAFKA_TOPIC_RAW,
         "kafka_partition": record_metadata.partition,
         "kafka_offset": record_metadata.offset,
