@@ -504,7 +504,7 @@ def make_mqtt_client():
     return client
 
 
-def publish_telemetry(client, grid, timestamp_str):
+def publish_telemetry(client, grid, timestamp_str, time_step=None):
     for node_id, node in grid.nodes.items():
         # frequency_noise: μετρητικός θόρυβος του ρελέ συχνότητας κάθε κόμβου
         # γύρω από την πραγματική, κοινή συχνότητα δικτύου (grid.frequency).
@@ -521,6 +521,9 @@ def publish_telemetry(client, grid, timestamp_str):
             'congestion_level': node['congestion_level'],
             'state_of_charge': node['state_of_charge'],
         }
+        if node.get('daily_profile') is not None and time_step is not None:
+            # simulated hour of day (0-24), so that a detector can divide out the daily curve of the .seg
+            payload['profile_hour'] = round((time_step / STEPS_PER_HOUR) % 24, 4)
         client.publish(f"{MQTT_TOPIC_PREFIX}/{node_id}", json.dumps(payload), qos=1)
 
 
@@ -562,7 +565,7 @@ if __name__ == "__main__":
             control_actions = compute_local_control_actions(grid)
 
             timestamp_str = datetime.now(timezone.utc).isoformat()
-            publish_telemetry(client, grid, timestamp_str)
+            publish_telemetry(client, grid, timestamp_str, step)
             print_node_telemetry(grid, step)
 
             step += 1

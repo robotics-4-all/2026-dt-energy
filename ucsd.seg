@@ -15,7 +15,7 @@ lines {
     lengthKM: 0.3
     maxCapacityMW: 40.0
     source: SUB_UCSD_MAIN
-    target: SUB_UCSD_MAIN
+    target: UCSD_CHP_GAS
     end
 }
 end
@@ -32,7 +32,7 @@ frequency: 60.0
 activePower: 24.0
 reactivePower: 7.0
 lastUpdate: "2026-06-11"
-isControllable: True
+isControllable: true
 maxCapacityMW: 30.0
 currentOutputMW: 24.0
 fuelType: "Natural Gas"

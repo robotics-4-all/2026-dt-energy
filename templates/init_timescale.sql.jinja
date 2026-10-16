@@ -44,3 +44,22 @@ SELECT create_hypertable('voltage_zscore_eval', 'timestamp', if_not_exists => TR
 
 CREATE INDEX IF NOT EXISTS idx_voltage_zscore_eval_node_id
     ON voltage_zscore_eval (node_id, "timestamp" DESC);
+
+-- Όπως το voltage_zscore_eval, για το φορτίο (active_power, MW) των κόμβων
+-- φορτίου (Residential/Industrial): Modified Z-score σε κάθε αξιολόγηση.
+CREATE TABLE IF NOT EXISTS load_zscore_eval (
+    "timestamp"   TIMESTAMPTZ       NOT NULL,
+    node_id       TEXT              NOT NULL,
+    load_mw       DOUBLE PRECISION,
+    median_v      DOUBLE PRECISION,
+    mad_v         DOUBLE PRECISION,
+    z_score       DOUBLE PRECISION,
+    predicted_p2  BOOLEAN,
+    predicted_p1  BOOLEAN,
+    factor        DOUBLE PRECISION   -- συντελεστής ημερήσιας καμπύλης που διαιρέθηκε πριν τον έλεγχο (NULL αν δεν υπάρχει)
+);
+
+SELECT create_hypertable('load_zscore_eval', 'timestamp', if_not_exists => TRUE);
+
+CREATE INDEX IF NOT EXISTS idx_load_zscore_eval_node_id
+    ON load_zscore_eval (node_id, "timestamp" DESC);

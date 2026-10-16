@@ -1,0 +1,18 @@
+{
+  "experiment": "experiment2_point_anomaly",
+  "anomaly_type": "point",
+  "injected_at_utc": "2026-10-09T06:05:01.497476+00:00",
+  "node_id": "LOAD-GR-SYSTEM",
+  "node_type": "Industrial",
+  "baseline_median_v": 356.2909954353606,
+  "baseline_mad_v": 1.7814549771768031,
+  "injected_voltage": 391.9200949788967,
+  "implied_z_mod": 20.000000000000014,
+  "true_anomaly": true,
+  "expected_predicted_p1": true,
+  "expected_predicted_p2": true,
+  "count": 3,
+  "kafka_topic": "telemetry.raw",
+  "kafka_partition": 0,
+  "kafka_offset": 15537
+}

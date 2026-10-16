@@ -186,6 +186,49 @@ def _migrate_sqlite_alerts_schema(conn):
     conn.commit()
 
 
+LOAD_NODE_TYPES = ("Residential", "Industrial")  # κόμβοι φορτίου: ο ανιχνευτής ελέγχει και το active_power τους
+# Ημερήσια καμπύλη φορτίου ανά κόμβο, από το .seg (dailyProfile: 24 συντελεστές με μέσο όρο 1.0).
+# Όταν υπάρχει και το δείγμα έχει ώρα (profile_hour, 0-24), το φορτίο διαιρείται με τον συντελεστή της ώρας
+# ΠΡΙΝ τον έλεγχο, ώστε η καθημερινή άνοδος/πτώση να μη θεωρείται ανωμαλία.
+LOAD_DAILY_PROFILES = {{ load_profiles | pyrepr }}
+
+
+def profile_factor(profile, hour):
+    """Συντελεστής της καμπύλης στην ώρα `hour` (0-24), με γραμμική παρεμβολή και περιέλιξη στα μεσάνυχτα
+    (ίδια λογική με τον edge simulator)."""
+    pos = hour % 24
+    i = int(pos)
+    frac = pos - i
+    return profile[i] * (1.0 - frac) + profile[(i + 1) % 24] * frac
+
+
+class ZScoreDetector:
+    """Modified Z-score (median/MAD) ενός κόμβου πάνω σε μία τιμή, με τα ΙΔΙΑ
+    όρια και την ίδια σειρά ενεργειών με τον έλεγχο τάσης: πρώτα αξιολόγηση
+    απέναντι στο παράθυρο των προηγούμενων τιμών, μετά προσθήκη της τιμής
+    στο παράθυρο. Χρησιμοποιείται για το φορτίο (active_power)."""
+
+    def __init__(self):
+        self.window = deque(maxlen=VOLTAGE_ZSCORE_WINDOW)
+        self.critical_streak = 0
+
+    def step(self, value):
+        """Επιστρέφει (z, median, mad, p1, p2) ή None όταν δεν υπάρχουν αρκετά δείγματα."""
+        result = None
+        if value is not None and value > 0:
+            if len(self.window) >= VOLTAGE_ZSCORE_MIN_SAMPLES:
+                median = statistics.median(self.window)
+                mad = statistics.median([abs(x - median) for x in self.window]) * VOLTAGE_MAD_FACTOR
+                mad = max(mad, abs(median) * VOLTAGE_ZSCORE_MIN_STD_FRACTION)
+                if mad > 0:
+                    z = abs(value - median) / mad
+                    self.critical_streak = self.critical_streak + 1 if z > VOLTAGE_ZSCORE_CRITICAL else 0
+                    result = (z, median, mad, z > VOLTAGE_ZSCORE_CRITICAL,
+                              self.critical_streak >= VOLTAGE_PERSISTENCE_SAMPLES)
+            self.window.append(value)
+        return result
+
+
 def init_timescale_alerts(dsn, retries=10, delay_s=3):
     """Δημιουργεί (αν δεν υπάρχει ήδη) το hypertable alerts, ΚΑΙ το hypertable
     voltage_zscore_eval (καταγραφή του z-score σε κάθε αξιολόγηση τάσης, όχι
@@ -235,7 +278,24 @@ def init_timescale_alerts(dsn, retries=10, delay_s=3):
                 cur.execute("""
                     SELECT create_hypertable('voltage_zscore_eval', 'timestamp', if_not_exists => TRUE)
                 """)
-            print("[analytics_consumer] TimescaleDB alerts + voltage_zscore_eval hypertables έτοιμα.")
+                cur.execute("""
+                    CREATE TABLE IF NOT EXISTS load_zscore_eval (
+                        "timestamp" TIMESTAMPTZ NOT NULL,
+                        node_id TEXT NOT NULL,
+                        load_mw DOUBLE PRECISION,
+                        median_v DOUBLE PRECISION,
+                        mad_v DOUBLE PRECISION,
+                        z_score DOUBLE PRECISION,
+                        predicted_p2 BOOLEAN,
+                        predicted_p1 BOOLEAN,
+                        factor DOUBLE PRECISION
+                    )
+                """)
+                cur.execute("ALTER TABLE load_zscore_eval ADD COLUMN IF NOT EXISTS factor DOUBLE PRECISION")
+                cur.execute("""
+                    SELECT create_hypertable('load_zscore_eval', 'timestamp', if_not_exists => TRUE)
+                """)
+            print("[analytics_consumer] TimescaleDB alerts + voltage_zscore_eval + load_zscore_eval hypertables έτοιμα.")
             return conn
         except Exception as exc:
             last_error = exc
@@ -254,6 +314,7 @@ class AnalyticsEngine:
         self._voltage_window = defaultdict(lambda: deque(maxlen=VOLTAGE_ZSCORE_WINDOW))  # node_id -> τελευταίες τιμές τάσης
         self._voltage_warning_streak = defaultdict(int)   # node_id -> συνεχόμενα δείγματα πάνω από WARNING
         self._voltage_critical_streak = defaultdict(int)  # node_id -> συνεχόμενα δείγματα πάνω από CRITICAL
+        self._load_detectors = defaultdict(ZScoreDetector)  # node_id -> ανιχνευτής φορτίου (active_power)
 
     def _should_alert(self, anomaly_type, node_id):
         """Αποτρέπει το ίδιο anomaly_type στον ίδιο κόμβο να καταγράφεται
@@ -340,6 +401,25 @@ class AnalyticsEngine:
                 )
         except Exception as exc:
             print(f"[analytics_consumer] αποτυχία εγγραφής z-score στην TimescaleDB (αγνοείται): {exc}")
+
+    def log_load_eval(self, timestamp, node_id, load_mw, median_v, mad_v, z_score, predicted_p2, predicted_p1, factor=None):
+        """Όπως το log_zscore_eval, για το φορτίο (active_power, MW): γράφει σε
+        ΚΑΘΕ αξιολόγηση στο hypertable load_zscore_eval. Το load_mw είναι η
+        ακατέργαστη τιμή· τα median_v/mad_v/z_score αφορούν την τιμή μετά τη διαίρεση με τον
+        συντελεστή της ημερήσιας καμπύλης (factor, ή NULL όταν δεν εφαρμόστηκε καμπύλη).
+        Αποτυγχάνει σιωπηλά αν δεν υπάρχει σύνδεση στην TimescaleDB."""
+        if self.timescale_conn is None:
+            return
+        try:
+            with self.timescale_conn.cursor() as cur:
+                cur.execute(
+                    """INSERT INTO load_zscore_eval
+                       ("timestamp", node_id, load_mw, median_v, mad_v, z_score, predicted_p2, predicted_p1, factor)
+                       VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)""",
+                    (timestamp, node_id, load_mw, median_v, mad_v, z_score, predicted_p2, predicted_p1, factor),
+                )
+        except Exception as exc:
+            print(f"[analytics_consumer] αποτυχία εγγραφής load z-score στην TimescaleDB (αγνοείται): {exc}")
 
     # Πλάτη στηλών για το tabular console output (Function/Result table).
     _TABLE_COL_WIDTHS = {"severity": 8, "node": 16, "function": 18, "result": 24}
@@ -501,6 +581,21 @@ class AnalyticsEngine:
                         self.log_alert(timestamp, node_id, "WARNING_VOLTAGE_DEVIATION", "WARNING",
                                         "Monitor Voltage", voltage)
             window.append(voltage)
+
+        # Ανίχνευση και στο φορτίο (active_power) των κόμβων φορτίου, με τον ίδιο
+        # Modified Z-score (μετά τη διαίρεση με την ημερήσια καμπύλη, όταν υπάρχει). Καταγράφεται μόνο στο load_zscore_eval (όχι alert).
+        if payload.get('node_type') in LOAD_NODE_TYPES:
+            raw = payload.get('active_power')
+            value, factor = raw, None
+            profile = LOAD_DAILY_PROFILES.get(node_id)
+            hour = payload.get('profile_hour')
+            if raw is not None and profile and hour is not None:
+                factor = profile_factor(profile, hour)
+                value = raw / factor
+            res = self._load_detectors[node_id].step(value)
+            if res is not None:
+                z, median_v, mad_v, p1, p2 = res
+                self.log_load_eval(timestamp, node_id, raw, median_v, mad_v, z, p2, p1, factor)
 
 
 def safe_json_deserialize(raw_bytes):

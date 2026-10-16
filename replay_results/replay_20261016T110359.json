@@ -1,0 +1,1016 @@
+{
+ "node_id": "LOAD-GR-SYSTEM",
+ "topic": "telemetry.raw",
+ "started_utc": "2026-10-16T11:03:59.138924+00:00",
+ "events": [
+  {
+   "kind": "spike",
+   "magnitude": 0.03,
+   "start": 60,
+   "end": 61,
+   "id": 1
+  }
+ ],
+ "samples": [
+  {
+   "index": 0,
+   "timestamp": "2026-10-16T11:03:59.138934+00:00",
+   "real_value": 6250.0,
+   "sent_value": 6250.0,
+   "profile_hour": 12.0,
+   "event_id": 0
+  },
+  {
+   "index": 1,
+   "timestamp": "2026-10-16T11:04:00.266156+00:00",
+   "real_value": 6354.0,
+   "sent_value": 6354.0,
+   "profile_hour": 12.25,
+   "event_id": 0
+  },
+  {
+   "index": 2,
+   "timestamp": "2026-10-16T11:04:01.267211+00:00",
+   "real_value": 6210.0,
+   "sent_value": 6210.0,
+   "profile_hour": 12.5,
+   "event_id": 0
+  },
+  {
+   "index": 3,
+   "timestamp": "2026-10-16T11:04:02.268015+00:00",
+   "real_value": 6185.0,
+   "sent_value": 6185.0,
+   "profile_hour": 12.75,
+   "event_id": 0
+  },
+  {
+   "index": 4,
+   "timestamp": "2026-10-16T11:04:03.268832+00:00",
+   "real_value": 6309.0,
+   "sent_value": 6309.0,
+   "profile_hour": 13.0,
+   "event_id": 0
+  },
+  {
+   "index": 5,
+   "timestamp": "2026-10-16T11:04:04.271031+00:00",
+   "real_value": 6229.0,
+   "sent_value": 6229.0,
+   "profile_hour": 13.25,
+   "event_id": 0
+  },
+  {
+   "index": 6,
+   "timestamp": "2026-10-16T11:04:05.271814+00:00",
+   "real_value": 6218.0,
+   "sent_value": 6218.0,
+   "profile_hour": 13.5,
+   "event_id": 0
+  },
+  {
+   "index": 7,
+   "timestamp": "2026-10-16T11:04:06.273442+00:00",
+   "real_value": 6203.0,
+   "sent_value": 6203.0,
+   "profile_hour": 13.75,
+   "event_id": 0
+  },
+  {
+   "index": 8,
+   "timestamp": "2026-10-16T11:04:07.274316+00:00",
+   "real_value": 6146.0,
+   "sent_value": 6146.0,
+   "profile_hour": 14.0,
+   "event_id": 0
+  },
+  {
+   "index": 9,
+   "timestamp": "2026-10-16T11:04:08.275452+00:00",
+   "real_value": 6016.0,
+   "sent_value": 6016.0,
+   "profile_hour": 14.25,
+   "event_id": 0
+  },
+  {
+   "index": 10,
+   "timestamp": "2026-10-16T11:04:09.276275+00:00",
+   "real_value": 6099.0,
+   "sent_value": 6099.0,
+   "profile_hour": 14.5,
+   "event_id": 0
+  },
+  {
+   "index": 11,
+   "timestamp": "2026-10-16T11:04:10.277095+00:00",
+   "real_value": 6055.0,
+   "sent_value": 6055.0,
+   "profile_hour": 14.75,
+   "event_id": 0
+  },
+  {
+   "index": 12,
+   "timestamp": "2026-10-16T11:04:11.277677+00:00",
+   "real_value": 5861.0,
+   "sent_value": 5861.0,
+   "profile_hour": 15.0,
+   "event_id": 0
+  },
+  {
+   "index": 13,
+   "timestamp": "2026-10-16T11:04:12.278696+00:00",
+   "real_value": 5950.0,
+   "sent_value": 5950.0,
+   "profile_hour": 15.25,
+   "event_id": 0
+  },
+  {
+   "index": 14,
+   "timestamp": "2026-10-16T11:04:13.279688+00:00",
+   "real_value": 5838.0,
+   "sent_value": 5838.0,
+   "profile_hour": 15.5,
+   "event_id": 0
+  },
+  {
+   "index": 15,
+   "timestamp": "2026-10-16T11:04:14.280344+00:00",
+   "real_value": 5890.0,
+   "sent_value": 5890.0,
+   "profile_hour": 15.75,
+   "event_id": 0
+  },
+  {
+   "index": 16,
+   "timestamp": "2026-10-16T11:04:15.282153+00:00",
+   "real_value": 5954.0,
+   "sent_value": 5954.0,
+   "profile_hour": 16.0,
+   "event_id": 0
+  },
+  {
+   "index": 17,
+   "timestamp": "2026-10-16T11:04:16.284517+00:00",
+   "real_value": 5835.0,
+   "sent_value": 5835.0,
+   "profile_hour": 16.25,
+   "event_id": 0
+  },
+  {
+   "index": 18,
+   "timestamp": "2026-10-16T11:04:17.286786+00:00",
+   "real_value": 5882.0,
+   "sent_value": 5882.0,
+   "profile_hour": 16.5,
+   "event_id": 0
+  },
+  {
+   "index": 19,
+   "timestamp": "2026-10-16T11:04:18.287630+00:00",
+   "real_value": 5841.0,
+   "sent_value": 5841.0,
+   "profile_hour": 16.75,
+   "event_id": 0
+  },
+  {
+   "index": 20,
+   "timestamp": "2026-10-16T11:04:19.288438+00:00",
+   "real_value": 5801.0,
+   "sent_value": 5801.0,
+   "profile_hour": 17.0,
+   "event_id": 0
+  },
+  {
+   "index": 21,
+   "timestamp": "2026-10-16T11:04:20.289319+00:00",
+   "real_value": 5768.0,
+   "sent_value": 5768.0,
+   "profile_hour": 17.25,
+   "event_id": 0
+  },
+  {
+   "index": 22,
+   "timestamp": "2026-10-16T11:04:21.290010+00:00",
+   "real_value": 5795.0,
+   "sent_value": 5795.0,
+   "profile_hour": 17.5,
+   "event_id": 0
+  },
+  {
+   "index": 23,
+   "timestamp": "2026-10-16T11:04:22.290581+00:00",
+   "real_value": 5738.0,
+   "sent_value": 5738.0,
+   "profile_hour": 17.75,
+   "event_id": 0
+  },
+  {
+   "index": 24,
+   "timestamp": "2026-10-16T11:04:23.291368+00:00",
+   "real_value": 5700.0,
+   "sent_value": 5700.0,
+   "profile_hour": 18.0,
+   "event_id": 0
+  },
+  {
+   "index": 25,
+   "timestamp": "2026-10-16T11:04:24.292812+00:00",
+   "real_value": 5653.0,
+   "sent_value": 5653.0,
+   "profile_hour": 18.25,
+   "event_id": 0
+  },
+  {
+   "index": 26,
+   "timestamp": "2026-10-16T11:04:25.293706+00:00",
+   "real_value": 5614.0,
+   "sent_value": 5614.0,
+   "profile_hour": 18.5,
+   "event_id": 0
+  },
+  {
+   "index": 27,
+   "timestamp": "2026-10-16T11:04:26.294841+00:00",
+   "real_value": 5627.0,
+   "sent_value": 5627.0,
+   "profile_hour": 18.75,
+   "event_id": 0
+  },
+  {
+   "index": 28,
+   "timestamp": "2026-10-16T11:04:27.295568+00:00",
+   "real_value": 5622.0,
+   "sent_value": 5622.0,
+   "profile_hour": 19.0,
+   "event_id": 0
+  },
+  {
+   "index": 29,
+   "timestamp": "2026-10-16T11:04:28.296488+00:00",
+   "real_value": 5740.0,
+   "sent_value": 5740.0,
+   "profile_hour": 19.25,
+   "event_id": 0
+  },
+  {
+   "index": 30,
+   "timestamp": "2026-10-16T11:04:29.297889+00:00",
+   "real_value": 5855.0,
+   "sent_value": 5855.0,
+   "profile_hour": 19.5,
+   "event_id": 0
+  },
+  {
+   "index": 31,
+   "timestamp": "2026-10-16T11:04:30.298918+00:00",
+   "real_value": 5963.0,
+   "sent_value": 5963.0,
+   "profile_hour": 19.75,
+   "event_id": 0
+  },
+  {
+   "index": 32,
+   "timestamp": "2026-10-16T11:04:31.299408+00:00",
+   "real_value": 5965.0,
+   "sent_value": 5965.0,
+   "profile_hour": 20.0,
+   "event_id": 0
+  },
+  {
+   "index": 33,
+   "timestamp": "2026-10-16T11:04:32.301225+00:00",
+   "real_value": 5932.0,
+   "sent_value": 5932.0,
+   "profile_hour": 20.25,
+   "event_id": 0
+  },
+  {
+   "index": 34,
+   "timestamp": "2026-10-16T11:04:33.302120+00:00",
+   "real_value": 5895.0,
+   "sent_value": 5895.0,
+   "profile_hour": 20.5,
+   "event_id": 0
+  },
+  {
+   "index": 35,
+   "timestamp": "2026-10-16T11:04:34.303546+00:00",
+   "real_value": 5837.0,
+   "sent_value": 5837.0,
+   "profile_hour": 20.75,
+   "event_id": 0
+  },
+  {
+   "index": 36,
+   "timestamp": "2026-10-16T11:04:35.304971+00:00",
+   "real_value": 5723.0,
+   "sent_value": 5723.0,
+   "profile_hour": 21.0,
+   "event_id": 0
+  },
+  {
+   "index": 37,
+   "timestamp": "2026-10-16T11:04:36.305920+00:00",
+   "real_value": 5604.0,
+   "sent_value": 5604.0,
+   "profile_hour": 21.25,
+   "event_id": 0
+  },
+  {
+   "index": 38,
+   "timestamp": "2026-10-16T11:04:37.306917+00:00",
+   "real_value": 5501.0,
+   "sent_value": 5501.0,
+   "profile_hour": 21.5,
+   "event_id": 0
+  },
+  {
+   "index": 39,
+   "timestamp": "2026-10-16T11:04:38.307730+00:00",
+   "real_value": 5382.0,
+   "sent_value": 5382.0,
+   "profile_hour": 21.75,
+   "event_id": 0
+  },
+  {
+   "index": 40,
+   "timestamp": "2026-10-16T11:04:39.308780+00:00",
+   "real_value": 5266.0,
+   "sent_value": 5266.0,
+   "profile_hour": 22.0,
+   "event_id": 0
+  },
+  {
+   "index": 41,
+   "timestamp": "2026-10-16T11:04:40.309357+00:00",
+   "real_value": 5179.0,
+   "sent_value": 5179.0,
+   "profile_hour": 22.25,
+   "event_id": 0
+  },
+  {
+   "index": 42,
+   "timestamp": "2026-10-16T11:04:41.310442+00:00",
+   "real_value": 5076.0,
+   "sent_value": 5076.0,
+   "profile_hour": 22.5,
+   "event_id": 0
+  },
+  {
+   "index": 43,
+   "timestamp": "2026-10-16T11:04:42.311153+00:00",
+   "real_value": 4948.0,
+   "sent_value": 4948.0,
+   "profile_hour": 22.75,
+   "event_id": 0
+  },
+  {
+   "index": 44,
+   "timestamp": "2026-10-16T11:04:43.312017+00:00",
+   "real_value": 4855.0,
+   "sent_value": 4855.0,
+   "profile_hour": 23.0,
+   "event_id": 0
+  },
+  {
+   "index": 45,
+   "timestamp": "2026-10-16T11:04:44.312909+00:00",
+   "real_value": 4780.0,
+   "sent_value": 4780.0,
+   "profile_hour": 23.25,
+   "event_id": 0
+  },
+  {
+   "index": 46,
+   "timestamp": "2026-10-16T11:04:45.314253+00:00",
+   "real_value": 4707.0,
+   "sent_value": 4707.0,
+   "profile_hour": 23.5,
+   "event_id": 0
+  },
+  {
+   "index": 47,
+   "timestamp": "2026-10-16T11:04:46.315219+00:00",
+   "real_value": 4627.0,
+   "sent_value": 4627.0,
+   "profile_hour": 23.75,
+   "event_id": 0
+  },
+  {
+   "index": 48,
+   "timestamp": "2026-10-16T11:04:47.316912+00:00",
+   "real_value": 4602.0,
+   "sent_value": 4602.0,
+   "profile_hour": 0.0,
+   "event_id": 0
+  },
+  {
+   "index": 49,
+   "timestamp": "2026-10-16T11:04:48.318085+00:00",
+   "real_value": 4564.0,
+   "sent_value": 4564.0,
+   "profile_hour": 0.25,
+   "event_id": 0
+  },
+  {
+   "index": 50,
+   "timestamp": "2026-10-16T11:04:49.319832+00:00",
+   "real_value": 4500.0,
+   "sent_value": 4500.0,
+   "profile_hour": 0.5,
+   "event_id": 0
+  },
+  {
+   "index": 51,
+   "timestamp": "2026-10-16T11:04:50.322221+00:00",
+   "real_value": 4429.0,
+   "sent_value": 4429.0,
+   "profile_hour": 0.75,
+   "event_id": 0
+  },
+  {
+   "index": 52,
+   "timestamp": "2026-10-16T11:04:51.323103+00:00",
+   "real_value": 4313.0,
+   "sent_value": 4313.0,
+   "profile_hour": 1.0,
+   "event_id": 0
+  },
+  {
+   "index": 53,
+   "timestamp": "2026-10-16T11:04:52.323758+00:00",
+   "real_value": 4355.0,
+   "sent_value": 4355.0,
+   "profile_hour": 1.25,
+   "event_id": 0
+  },
+  {
+   "index": 54,
+   "timestamp": "2026-10-16T11:04:53.324340+00:00",
+   "real_value": 4304.0,
+   "sent_value": 4304.0,
+   "profile_hour": 1.5,
+   "event_id": 0
+  },
+  {
+   "index": 55,
+   "timestamp": "2026-10-16T11:04:54.324875+00:00",
+   "real_value": 4224.0,
+   "sent_value": 4224.0,
+   "profile_hour": 1.75,
+   "event_id": 0
+  },
+  {
+   "index": 56,
+   "timestamp": "2026-10-16T11:04:55.325833+00:00",
+   "real_value": 4238.0,
+   "sent_value": 4238.0,
+   "profile_hour": 2.0,
+   "event_id": 0
+  },
+  {
+   "index": 57,
+   "timestamp": "2026-10-16T11:04:56.326850+00:00",
+   "real_value": 4244.0,
+   "sent_value": 4244.0,
+   "profile_hour": 2.25,
+   "event_id": 0
+  },
+  {
+   "index": 58,
+   "timestamp": "2026-10-16T11:04:57.327736+00:00",
+   "real_value": 4242.0,
+   "sent_value": 4242.0,
+   "profile_hour": 2.5,
+   "event_id": 0
+  },
+  {
+   "index": 59,
+   "timestamp": "2026-10-16T11:04:58.328574+00:00",
+   "real_value": 4119.0,
+   "sent_value": 4119.0,
+   "profile_hour": 2.75,
+   "event_id": 0
+  },
+  {
+   "index": 60,
+   "timestamp": "2026-10-16T11:04:59.329296+00:00",
+   "real_value": 4108.0,
+   "sent_value": 4231.24,
+   "profile_hour": 3.0,
+   "event_id": 1
+  },
+  {
+   "index": 61,
+   "timestamp": "2026-10-16T11:05:00.330045+00:00",
+   "real_value": 4083.0,
+   "sent_value": 4083.0,
+   "profile_hour": 3.25,
+   "event_id": 0
+  },
+  {
+   "index": 62,
+   "timestamp": "2026-10-16T11:05:01.331217+00:00",
+   "real_value": 4165.0,
+   "sent_value": 4165.0,
+   "profile_hour": 3.5,
+   "event_id": 0
+  },
+  {
+   "index": 63,
+   "timestamp": "2026-10-16T11:05:02.332138+00:00",
+   "real_value": 4081.0,
+   "sent_value": 4081.0,
+   "profile_hour": 3.75,
+   "event_id": 0
+  },
+  {
+   "index": 64,
+   "timestamp": "2026-10-16T11:05:03.332885+00:00",
+   "real_value": 4051.0,
+   "sent_value": 4051.0,
+   "profile_hour": 4.0,
+   "event_id": 0
+  },
+  {
+   "index": 65,
+   "timestamp": "2026-10-16T11:05:04.333814+00:00",
+   "real_value": 4136.0,
+   "sent_value": 4136.0,
+   "profile_hour": 4.25,
+   "event_id": 0
+  },
+  {
+   "index": 66,
+   "timestamp": "2026-10-16T11:05:05.334269+00:00",
+   "real_value": 4015.0,
+   "sent_value": 4015.0,
+   "profile_hour": 4.75,
+   "event_id": 0
+  },
+  {
+   "index": 67,
+   "timestamp": "2026-10-16T11:05:06.335232+00:00",
+   "real_value": 4107.0,
+   "sent_value": 4107.0,
+   "profile_hour": 5.0,
+   "event_id": 0
+  },
+  {
+   "index": 68,
+   "timestamp": "2026-10-16T11:05:07.336376+00:00",
+   "real_value": 4158.0,
+   "sent_value": 4158.0,
+   "profile_hour": 5.25,
+   "event_id": 0
+  },
+  {
+   "index": 69,
+   "timestamp": "2026-10-16T11:05:08.337291+00:00",
+   "real_value": 4225.0,
+   "sent_value": 4225.0,
+   "profile_hour": 5.5,
+   "event_id": 0
+  },
+  {
+   "index": 70,
+   "timestamp": "2026-10-16T11:05:09.338217+00:00",
+   "real_value": 4132.0,
+   "sent_value": 4132.0,
+   "profile_hour": 5.75,
+   "event_id": 0
+  },
+  {
+   "index": 71,
+   "timestamp": "2026-10-16T11:05:10.338973+00:00",
+   "real_value": 4214.0,
+   "sent_value": 4214.0,
+   "profile_hour": 6.0,
+   "event_id": 0
+  },
+  {
+   "index": 72,
+   "timestamp": "2026-10-16T11:05:11.339737+00:00",
+   "real_value": 4324.0,
+   "sent_value": 4324.0,
+   "profile_hour": 6.25,
+   "event_id": 0
+  },
+  {
+   "index": 73,
+   "timestamp": "2026-10-16T11:05:12.340792+00:00",
+   "real_value": 4326.0,
+   "sent_value": 4326.0,
+   "profile_hour": 6.5,
+   "event_id": 0
+  },
+  {
+   "index": 74,
+   "timestamp": "2026-10-16T11:05:13.341533+00:00",
+   "real_value": 4334.0,
+   "sent_value": 4334.0,
+   "profile_hour": 6.75,
+   "event_id": 0
+  },
+  {
+   "index": 75,
+   "timestamp": "2026-10-16T11:05:14.342613+00:00",
+   "real_value": 4324.0,
+   "sent_value": 4324.0,
+   "profile_hour": 7.0,
+   "event_id": 0
+  },
+  {
+   "index": 76,
+   "timestamp": "2026-10-16T11:05:15.343573+00:00",
+   "real_value": 4401.0,
+   "sent_value": 4401.0,
+   "profile_hour": 7.25,
+   "event_id": 0
+  },
+  {
+   "index": 77,
+   "timestamp": "2026-10-16T11:05:16.346510+00:00",
+   "real_value": 4449.0,
+   "sent_value": 4449.0,
+   "profile_hour": 7.5,
+   "event_id": 0
+  },
+  {
+   "index": 78,
+   "timestamp": "2026-10-16T11:05:17.347343+00:00",
+   "real_value": 4621.0,
+   "sent_value": 4621.0,
+   "profile_hour": 7.75,
+   "event_id": 0
+  },
+  {
+   "index": 79,
+   "timestamp": "2026-10-16T11:05:18.347989+00:00",
+   "real_value": 4820.0,
+   "sent_value": 4820.0,
+   "profile_hour": 8.25,
+   "event_id": 0
+  },
+  {
+   "index": 80,
+   "timestamp": "2026-10-16T11:05:19.348775+00:00",
+   "real_value": 4878.0,
+   "sent_value": 4878.0,
+   "profile_hour": 8.5,
+   "event_id": 0
+  },
+  {
+   "index": 81,
+   "timestamp": "2026-10-16T11:05:20.349530+00:00",
+   "real_value": 4918.0,
+   "sent_value": 4918.0,
+   "profile_hour": 8.75,
+   "event_id": 0
+  },
+  {
+   "index": 82,
+   "timestamp": "2026-10-16T11:05:21.350448+00:00",
+   "real_value": 5071.0,
+   "sent_value": 5071.0,
+   "profile_hour": 9.0,
+   "event_id": 0
+  },
+  {
+   "index": 83,
+   "timestamp": "2026-10-16T11:05:22.351268+00:00",
+   "real_value": 5164.0,
+   "sent_value": 5164.0,
+   "profile_hour": 9.25,
+   "event_id": 0
+  },
+  {
+   "index": 84,
+   "timestamp": "2026-10-16T11:05:23.351778+00:00",
+   "real_value": 5163.0,
+   "sent_value": 5163.0,
+   "profile_hour": 9.5,
+   "event_id": 0
+  },
+  {
+   "index": 85,
+   "timestamp": "2026-10-16T11:05:24.353293+00:00",
+   "real_value": 5284.0,
+   "sent_value": 5284.0,
+   "profile_hour": 9.75,
+   "event_id": 0
+  },
+  {
+   "index": 86,
+   "timestamp": "2026-10-16T11:05:25.353994+00:00",
+   "real_value": 5481.0,
+   "sent_value": 5481.0,
+   "profile_hour": 10.0,
+   "event_id": 0
+  },
+  {
+   "index": 87,
+   "timestamp": "2026-10-16T11:05:26.355044+00:00",
+   "real_value": 5477.0,
+   "sent_value": 5477.0,
+   "profile_hour": 10.25,
+   "event_id": 0
+  },
+  {
+   "index": 88,
+   "timestamp": "2026-10-16T11:05:27.355721+00:00",
+   "real_value": 5457.0,
+   "sent_value": 5457.0,
+   "profile_hour": 10.5,
+   "event_id": 0
+  },
+  {
+   "index": 89,
+   "timestamp": "2026-10-16T11:05:28.356687+00:00",
+   "real_value": 5504.0,
+   "sent_value": 5504.0,
+   "profile_hour": 10.75,
+   "event_id": 0
+  },
+  {
+   "index": 90,
+   "timestamp": "2026-10-16T11:05:29.357536+00:00",
+   "real_value": 5551.0,
+   "sent_value": 5551.0,
+   "profile_hour": 11.0,
+   "event_id": 0
+  },
+  {
+   "index": 91,
+   "timestamp": "2026-10-16T11:05:30.358278+00:00",
+   "real_value": 5648.0,
+   "sent_value": 5648.0,
+   "profile_hour": 11.25,
+   "event_id": 0
+  },
+  {
+   "index": 92,
+   "timestamp": "2026-10-16T11:05:31.358815+00:00",
+   "real_value": 5573.0,
+   "sent_value": 5573.0,
+   "profile_hour": 11.5,
+   "event_id": 0
+  },
+  {
+   "index": 93,
+   "timestamp": "2026-10-16T11:05:32.359840+00:00",
+   "real_value": 5632.0,
+   "sent_value": 5632.0,
+   "profile_hour": 11.75,
+   "event_id": 0
+  },
+  {
+   "index": 94,
+   "timestamp": "2026-10-16T11:05:33.361320+00:00",
+   "real_value": 5718.0,
+   "sent_value": 5718.0,
+   "profile_hour": 12.0,
+   "event_id": 0
+  },
+  {
+   "index": 95,
+   "timestamp": "2026-10-16T11:05:34.361991+00:00",
+   "real_value": 5819.0,
+   "sent_value": 5819.0,
+   "profile_hour": 12.25,
+   "event_id": 0
+  },
+  {
+   "index": 96,
+   "timestamp": "2026-10-16T11:05:35.362614+00:00",
+   "real_value": 5869.0,
+   "sent_value": 5869.0,
+   "profile_hour": 12.5,
+   "event_id": 0
+  },
+  {
+   "index": 97,
+   "timestamp": "2026-10-16T11:05:36.364555+00:00",
+   "real_value": 5999.0,
+   "sent_value": 5999.0,
+   "profile_hour": 12.75,
+   "event_id": 0
+  },
+  {
+   "index": 98,
+   "timestamp": "2026-10-16T11:05:37.365639+00:00",
+   "real_value": 6349.0,
+   "sent_value": 6349.0,
+   "profile_hour": 13.0,
+   "event_id": 0
+  },
+  {
+   "index": 99,
+   "timestamp": "2026-10-16T11:05:38.366642+00:00",
+   "real_value": 6271.0,
+   "sent_value": 6271.0,
+   "profile_hour": 13.25,
+   "event_id": 0
+  },
+  {
+   "index": 100,
+   "timestamp": "2026-10-16T11:05:39.367244+00:00",
+   "real_value": 6212.0,
+   "sent_value": 6212.0,
+   "profile_hour": 13.5,
+   "event_id": 0
+  },
+  {
+   "index": 101,
+   "timestamp": "2026-10-16T11:05:40.369370+00:00",
+   "real_value": 6139.0,
+   "sent_value": 6139.0,
+   "profile_hour": 13.75,
+   "event_id": 0
+  },
+  {
+   "index": 102,
+   "timestamp": "2026-10-16T11:05:41.370212+00:00",
+   "real_value": 6150.0,
+   "sent_value": 6150.0,
+   "profile_hour": 14.0,
+   "event_id": 0
+  },
+  {
+   "index": 103,
+   "timestamp": "2026-10-16T11:05:42.371266+00:00",
+   "real_value": 6096.0,
+   "sent_value": 6096.0,
+   "profile_hour": 14.25,
+   "event_id": 0
+  },
+  {
+   "index": 104,
+   "timestamp": "2026-10-16T11:05:43.371879+00:00",
+   "real_value": 6019.0,
+   "sent_value": 6019.0,
+   "profile_hour": 14.5,
+   "event_id": 0
+  },
+  {
+   "index": 105,
+   "timestamp": "2026-10-16T11:05:44.372555+00:00",
+   "real_value": 5832.0,
+   "sent_value": 5832.0,
+   "profile_hour": 14.75,
+   "event_id": 0
+  },
+  {
+   "index": 106,
+   "timestamp": "2026-10-16T11:05:45.373628+00:00",
+   "real_value": 5745.0,
+   "sent_value": 5745.0,
+   "profile_hour": 15.0,
+   "event_id": 0
+  },
+  {
+   "index": 107,
+   "timestamp": "2026-10-16T11:05:46.374338+00:00",
+   "real_value": 5694.0,
+   "sent_value": 5694.0,
+   "profile_hour": 15.25,
+   "event_id": 0
+  },
+  {
+   "index": 108,
+   "timestamp": "2026-10-16T11:05:47.374901+00:00",
+   "real_value": 5657.0,
+   "sent_value": 5657.0,
+   "profile_hour": 15.5,
+   "event_id": 0
+  },
+  {
+   "index": 109,
+   "timestamp": "2026-10-16T11:05:48.375680+00:00",
+   "real_value": 5515.0,
+   "sent_value": 5515.0,
+   "profile_hour": 15.75,
+   "event_id": 0
+  },
+  {
+   "index": 110,
+   "timestamp": "2026-10-16T11:05:49.376815+00:00",
+   "real_value": 5473.0,
+   "sent_value": 5473.0,
+   "profile_hour": 16.0,
+   "event_id": 0
+  },
+  {
+   "index": 111,
+   "timestamp": "2026-10-16T11:05:50.377440+00:00",
+   "real_value": 5410.0,
+   "sent_value": 5410.0,
+   "profile_hour": 16.25,
+   "event_id": 0
+  },
+  {
+   "index": 112,
+   "timestamp": "2026-10-16T11:05:51.378395+00:00",
+   "real_value": 5420.0,
+   "sent_value": 5420.0,
+   "profile_hour": 16.5,
+   "event_id": 0
+  },
+  {
+   "index": 113,
+   "timestamp": "2026-10-16T11:05:52.379368+00:00",
+   "real_value": 5415.0,
+   "sent_value": 5415.0,
+   "profile_hour": 16.75,
+   "event_id": 0
+  },
+  {
+   "index": 114,
+   "timestamp": "2026-10-16T11:05:53.380219+00:00",
+   "real_value": 5332.0,
+   "sent_value": 5332.0,
+   "profile_hour": 17.0,
+   "event_id": 0
+  },
+  {
+   "index": 115,
+   "timestamp": "2026-10-16T11:05:54.381388+00:00",
+   "real_value": 5318.0,
+   "sent_value": 5318.0,
+   "profile_hour": 17.25,
+   "event_id": 0
+  },
+  {
+   "index": 116,
+   "timestamp": "2026-10-16T11:05:55.381887+00:00",
+   "real_value": 5312.0,
+   "sent_value": 5312.0,
+   "profile_hour": 17.5,
+   "event_id": 0
+  },
+  {
+   "index": 117,
+   "timestamp": "2026-10-16T11:05:56.383029+00:00",
+   "real_value": 5253.0,
+   "sent_value": 5253.0,
+   "profile_hour": 17.75,
+   "event_id": 0
+  },
+  {
+   "index": 118,
+   "timestamp": "2026-10-16T11:05:57.383746+00:00",
+   "real_value": 5222.0,
+   "sent_value": 5222.0,
+   "profile_hour": 18.0,
+   "event_id": 0
+  },
+  {
+   "index": 119,
+   "timestamp": "2026-10-16T11:05:58.384247+00:00",
+   "real_value": 5244.0,
+   "sent_value": 5244.0,
+   "profile_hour": 18.25,
+   "event_id": 0
+  },
+  {
+   "index": 120,
+   "timestamp": "2026-10-16T11:05:59.385153+00:00",
+   "real_value": 5230.0,
+   "sent_value": 5230.0,
+   "profile_hour": 18.5,
+   "event_id": 0
+  }
+ ],
+ "profile": [
+  0.8573,
+  0.8084,
+  0.7801,
+  0.7656,
+  0.7593,
+  0.7663,
+  0.8075,
+  0.8869,
+  0.9515,
+  1.0163,
+  1.0938,
+  1.2011,
+  1.2584,
+  1.2837,
+  1.2516,
+  1.1689,
+  1.1036,
+  1.0598,
+  1.0371,
+  1.0553,
+  1.119,
+  1.0742,
+  0.9818,
+  0.9125
+ ],
+ "detector": {
+  "window": 30,
+  "min_samples": 10,
+  "critical": 3.5,
+  "persistence": 2
+ }
+}

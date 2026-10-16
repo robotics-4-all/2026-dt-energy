@@ -15,7 +15,7 @@ lines {
     lengthKM: 1.2
     maxCapacityMW: 3.0
     source: SUB_TRK_MAIN
-    target: SUB_TRK_MAIN
+    target: TRK_PV_ROOFS
     end
 }
 end
@@ -32,7 +32,7 @@ frequency: 50.0
 activePower: 1.1
 reactivePower: 0.2
 lastUpdate: "2026-06-11"
-isControllable: True
+isControllable: true
 maxCapacityMW: 1.5
 currentOutputMW: 1.1
 panelType: "Monocrystalline"

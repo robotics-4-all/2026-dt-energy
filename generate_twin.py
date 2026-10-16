@@ -314,6 +314,7 @@ def generate_digital_twin(model_path, templates_dir='templates', grammar_path=No
         'project_slug': project_slug,
         'kafka_cluster_id': kafka_cluster_id(project_slug),
         'node_summaries': node_summaries,
+        'load_profiles': {n['id']: n['daily_profile'] for n in node_summaries if n['daily_profile']},
         'all_lines': all_lines,
         'node_distributions': node_distributions,
         'mqtt_topic_prefix': f"grid/telemetry/{project_slug}",

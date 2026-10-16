@@ -15,7 +15,7 @@ lines {
     lengthKM: 3.2
     maxCapacityMW: 1.0
     source: SUB_RURAL_DIST
-    target: SUB_RURAL_DIST
+    target: IND_RURAL_PUMPS
     end
 }
 end
@@ -32,7 +32,7 @@ frequency: 50.0
 activePower: 0.15
 reactivePower: 0.07
 lastUpdate: "2026-06-11"
-isControllable: False
+isControllable: false
 demandMW: 0.15
 currentConsumption: 0.15
 industryType: "Agricultural Irrigation"

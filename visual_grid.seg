@@ -17,7 +17,7 @@ BatteryStorage BatteryStorage_3_320
     voltageLevel: 20.0
     status: ACTIVE
     capacityMWh: 5.0
-    stateOfCharge: 80.0
+    stateOfCharge: 0.8
     lines {
         PowerLine line_BatteryStorage_3_320_1
             id: "L_BatteryStorage_3_320_1"
@@ -41,7 +41,7 @@ WindFarm WindFarm_2_958
     activePower: 1.5
     reactivePower: 0.2
     lastUpdate: "2026-06-30"
-    isControllable: True
+    isControllable: true
     maxCapacityMW: 20.0
     currentOutputMW: 11.2
     windSpeed: 12.5
@@ -60,9 +60,9 @@ Residential Residential_4_715
     activePower: 1.5
     reactivePower: 0.2
     lastUpdate: "2026-06-30"
-    isControllable: True
+    isControllable: true
     demandMW: 5.0
     currentConsumption: 4.2
     numberOfResidents: 250
-    hasSmartAppliances: True
+    hasSmartAppliances: true
 end

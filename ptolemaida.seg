@@ -45,7 +45,7 @@ GlobalDistributions PTL_GRID_DEFAULTS
 wind_speed: WEIBULL(shape=2.0, scale=10.8)
 solar_noise: NORMAL(mu=0.0, sigma=0.02)
 load_noise: NORMAL(mu=0.0, sigma=0.0102)
-voltage_noise: NORMAL(mu=0.0, sigma=0.0007)
+// voltage_noise: not calibrated (no dataset used); the system default NORMAL(mu=0.0, sigma=0.01) applies.
 end
 
 ClassDistributions PTL_INDUSTRIAL_LOAD
